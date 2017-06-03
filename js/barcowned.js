@@ -10,6 +10,8 @@ var models = [
 		autodelay: 500,
 		setup: {
 			symbology: "CODE128",
+			prefix: "\x80",
+			postfix: "",
 			enterconfig: [
 				"2050207", // CODE128 Presentation mode scanning ("Blink")
 				"1040601" // CODE128 Enable parameter scanning
@@ -67,15 +69,15 @@ $(function () {
 	if (script.setup.length > 0) {
 		for (var i = 0; i < model.setup.enterconfig.length; i++)
 		{
-			addBarcode(model.setup.enterconfig[i], {format: model.setup.symbology});
+			addBarcode(model.setup.prefix + model.setup.enterconfig[i] + model.setup.postfix, {format: model.setup.symbology});
 		}
 		for (var i = 0; i < script.setup.length; i++)
 		{
-			addBarcode(script.setup[i], {format: model.setup.symbology});
+			addBarcode(model.setup.prefix + script.setup[i] + model.setup.postfix, {format: model.setup.symbology});
 		}
 		for (var i = 0; i < model.setup.exitconfig.length; i++)
 		{
-			addBarcode(model.setup.exitconfig[i], {format: model.setup.symbology});
+			addBarcode(model.setup.prefix + model.setup.exitconfig[i] + model.setup.postfix, {format: model.setup.symbology});
 		}
 	}
 	
