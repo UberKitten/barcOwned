@@ -7,24 +7,29 @@ $(function  () {
 var bw;
 var barcodeNumber = 0;
 
-var models = [
-	{
+var models = {
+	symbolds6707: {
 		name: "Symbol DS6707",
 		autodelay: 500,
+		options: {
+			scanpresentation: ["2050207"], // CODE128 Presentation mode scanning ("Blink")
+			enableparameterscanning: ["1040601"] // CODE128 Enable parameter scanning
+		},
 		setup: {
 			symbology: "code128",
 			prefix: "^FNC3",
 			postfix: "",
-			enterconfig: [
-				"2050207", // CODE128 Presentation mode scanning ("Blink")
-				"1040601" // CODE128 Enable parameter scanning
-			],
+			enterconfig: [],
 			exitconfig: []
+		},
+		bwippoptions: {
+			parsefnc: true,
+			includetext: true
 		}
 		
 		// Using ADF with longer bar codes transmits the bar code in segments of length 252 or less (depending on the host selected), and applies the rule to each segment.
 	}
-];
+};
 
 var example = {
 	symbology: "code128",
@@ -72,7 +77,7 @@ function addBarcode(text, symbology, options) {
 }
 
 $(function () {	
-	var model = models[0];
+	var model = models.symbolds6707;
 	var script = example;
 	
 	bw = new BWIPJS(Module, false);
@@ -80,15 +85,15 @@ $(function () {
 	if (script.setup.length > 0) {
 		for (var i = 0; i < model.setup.enterconfig.length; i++)
 		{
-			addBarcode(model.setup.prefix + model.setup.enterconfig[i] + model.setup.postfix, model.setup.symbology);
+			addBarcode(model.setup.prefix + model.setup.enterconfig[i] + model.setup.postfix, model.setup.symbology, model.bwippoptions);
 		}
 		for (var i = 0; i < script.setup.length; i++)
 		{
-			addBarcode(model.setup.prefix + script.setup[i] + model.setup.postfix, model.setup.symbology);
+			addBarcode(model.setup.prefix + script.setup[i] + model.setup.postfix, model.setup.symbology, model.bwippoptions);
 		}
 		for (var i = 0; i < model.setup.exitconfig.length; i++)
 		{
-			addBarcode(model.setup.prefix + model.setup.exitconfig[i] + model.setup.postfix, model.setup.symbology);
+			addBarcode(model.setup.prefix + model.setup.exitconfig[i] + model.setup.postfix, model.setup.symbology, model.bwippoptions);
 		}
 	}
 	
@@ -96,12 +101,12 @@ $(function () {
 	{
 		for (var j = 0; j < script.replacements[i].length; j++)
 		{
-			addBarcode(script.replacements[i][j],  model.setup.symbology);
+			addBarcode(script.replacements[i][j],  model.setup.symbology, model.bwippoptions);
 		}
 	}
 	
 	for (var i = 0; i < script.payload.length; i++)
 	{
-		addBarcode(script.payload[i], script.symbology);
+		addBarcode(script.payload[i], script.symbology, model.bwippoptions);
 	}
 });
