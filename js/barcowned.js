@@ -4,13 +4,16 @@ $(function  () {
 
 // DS6707 CODE128 No enter config
 
+var bw;
+var barcodeNumber = 0;
+
 var models = [
 	{
 		name: "Symbol DS6707",
 		autodelay: 500,
 		setup: {
-			symbology: "CODE128",
-			prefix: "\x80",
+			symbology: "code128",
+			prefix: "^FNC3",
 			postfix: "",
 			enterconfig: [
 				"2050207", // CODE128 Presentation mode scanning ("Blink")
@@ -24,7 +27,7 @@ var models = [
 ];
 
 var example = {
-	symbology: "CODE128",
+	symbology: "code128",
 	setup: [
 	
 		"N02CC03", // CODE128 Mobile Phone Decode Enable
@@ -56,28 +59,36 @@ var example = {
 };
 
 
-function addBarcode(text, options) {
-	var canvas = $("<canvas/>");
+function addBarcode(text, symbology, options) {
+	var canvas = $("<canvas/>", { id: "barcode-" + barcodeNumber});
 	$("#barcodes").append($("<li>").append(canvas));
-	canvas.JsBarcode(text, options);
+	var rawcanvas = canvas[0];
+	
+	bw.bitmap(new Bitmap);
+	// bw.scale(2,2); // crashes chrome??
+	BWIPP()(bw, symbology, text, options);
+	bw.bitmap().show(rawcanvas, "N"); // "normal"
+	barcodeNumber++;
 }
 
 $(function () {	
 	var model = models[0];
 	var script = example;
 	
+	bw = new BWIPJS(Module, false);
+	
 	if (script.setup.length > 0) {
 		for (var i = 0; i < model.setup.enterconfig.length; i++)
 		{
-			addBarcode(model.setup.prefix + model.setup.enterconfig[i] + model.setup.postfix, {format: model.setup.symbology});
+			addBarcode(model.setup.prefix + model.setup.enterconfig[i] + model.setup.postfix, model.setup.symbology);
 		}
 		for (var i = 0; i < script.setup.length; i++)
 		{
-			addBarcode(model.setup.prefix + script.setup[i] + model.setup.postfix, {format: model.setup.symbology});
+			addBarcode(model.setup.prefix + script.setup[i] + model.setup.postfix, model.setup.symbology);
 		}
 		for (var i = 0; i < model.setup.exitconfig.length; i++)
 		{
-			addBarcode(model.setup.prefix + model.setup.exitconfig[i] + model.setup.postfix, {format: model.setup.symbology});
+			addBarcode(model.setup.prefix + model.setup.exitconfig[i] + model.setup.postfix, model.setup.symbology);
 		}
 	}
 	
@@ -85,12 +96,12 @@ $(function () {
 	{
 		for (var j = 0; j < script.replacements[i].length; j++)
 		{
-			addBarcode(script.replacements[i][j], {format: model.setup.symbology});
+			addBarcode(script.replacements[i][j],  model.setup.symbology);
 		}
 	}
 	
 	for (var i = 0; i < script.payload.length; i++)
 	{
-		addBarcode(script.payload[i], {format: script.symbology});
+		addBarcode(script.payload[i], script.symbology);
 	}
 });
