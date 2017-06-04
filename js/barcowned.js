@@ -12,7 +12,7 @@ var models = {
 		name: "Symbol DS6707",
 		autodelay: 500,
 		options: {
-			scanpresentation: ["2050207"], // CODE128 Presentation mode scanning ("Blink")
+			//scanpresentation: ["2050207"], // CODE128 Presentation mode scanning ("Blink")
 			enableparameterscanning: ["1040601"] // CODE128 Enable parameter scanning
 		},
 		setup: {
@@ -36,25 +36,30 @@ var example = {
 	setup: [
 	
 		"N02CC03", // CODE128 Mobile Phone Decode Enable
-		"N02D60D" // CODE128 Mobile Phone Decode High Aggressive
-		//"60", // CODE128 Erase all rules
+		"N02D60D", // CODE128 Mobile Phone Decode High Aggressive
+		"80" // CODE128 Erase all rules
 	],
 	replacements: [
 		[
-			"7B1211", // CODE128 begin new rule
-			"6C201", // CODE128 specific string at start (max 8)
-			"`1", // `1
-			"B+", // CODE128 end of message
-			"20C0D20063", // CODE128 specify pause duration
-			"A1", "A5", // 1.0 second delay
-			"6A144352", // CODE128 send Win + R
-			"6A118", // CODE128 send pause
-			"cmd",
-			"6A14470D", // CODE128 send enter
-			"6A118", // CODE128 send pause
-			"6A110", // CODE128 send all data that remains
-			"B+", // CODE128 end of message
-			"4" // CODE128 save rule
+			"^FNC37B1211", // CODE128 begin new rule
+			"^FNC36C201", // CODE128 specific string at start (max 8)
+			"^FNC3B60", // `
+			"^FNC3B31", // 1
+			"^FNC3B+", // CODE128 end of message
+			"^FNC330C0D20063", // CODE128 specify pause duration
+			"^FNC3A1", "^FNC3A5", // 1.0 second delay
+			"^FNC36A144352", // CODE128 send Win + R
+			"^FNC36A118", // CODE128 send pause
+			"^FNC3B63", // c
+			"^FNC3B6D", // m
+			"^FNC3B64", // d
+			"^FNC36A14470D", // CODE128 send enter
+			"^FNC36A118", // CODE128 send pause
+			"^FNC36A143302", // skip ahead 2 characters (ignoring `1 at start)
+			"^FNC36A110", // CODE128 send all data that remains
+			"^FNC36A14470D", // CODE128 send enter
+			"^FNC3B+", // CODE128 end of message
+			"^FNC34" // CODE128 save rule
 		]
 	],
 	payload: [
