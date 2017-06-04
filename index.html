@@ -50,78 +50,8 @@
 	</div>
 	</nav>
 	<div class="container" role="main">
-		<div id="select-model" class="jumbotron">
-			<p>Select a model:</p>
-			<p>
-			<button type="button" class="btn btn-default">Symbol DS6707</button>
-			<button type="button" class="btn btn-default">Symbol M2004</button>
-			<button type="button" class="btn btn-default">Natamo Wireless</button>
-			</p>
-		</div>
-		
-		<button id="change-model" type="button" class="btn btn-default">Change model</button>
-		
-		<div class="page-header">
-			<h1>Barcode Queue</h1>
-		</div>
-		<ol class="example">
-			<li>
-				First 
-				<button type="button" class="btn btn-sm btn-primary">Edit</button>
-				<button type="button" class="btn btn-sm btn-danger">Delete</button>
-			</li>
-			<li>Second
-				<button type="button" class="btn btn-sm btn-primary">Edit</button>
-				<button type="button" class="btn btn-sm btn-danger">Delete</button></li>
-			<li>Third
-				<button type="button" class="btn btn-sm btn-primary">Edit</button>
-				<button type="button" class="btn btn-sm btn-danger">Delete</button></li>
+		<ol id="barcodes">
 		</ol>
-		
-		<button id="change-model" type="button" class="btn btn-default">Enter Scan Mode</button>
-		
-		<div class="page-header">
-			<h1>Add Barcode</h1>
-		</div>
-		
-		<div id="add-menu" class="list-group">
-			<a href="#" class="list-group-item">Function Keys</a>
-			<a href="#" class="list-group-item">Super + Character</a>
-			<a href="#" class="list-group-item">Ctrl + Character</a>
-			<a href="#" class="list-group-item">Alt + Character</a>
-			<a href="#" class="list-group-item">Freeform Text</a>
-			<a href="#" class="list-group-item">Individual Keys</a>
-			<a href="#" class="list-group-item">Delay</a>
-		</div>
-		
-		<div class="page-header">
-			<h1>Modify Barcode</h1>
-		</div>
-		
-		<div id="edit-menu">
-			
-			<button type="button" class="btn btn-default">F1</button>
-			<button type="button" class="btn btn-default">F2</button>
-			<button type="button" class="btn btn-default">F3</button>
-			<button type="button" class="btn btn-default">F4</button>
-			<button type="button" class="btn btn-default">F5</button>
-			<button type="button" class="btn btn-default">F6</button>
-			<button type="button" class="btn btn-default">F7</button>
-			<button type="button" class="btn btn-default">F8</button>
-			<button type="button" class="btn btn-default">F9</button>
-			<button type="button" class="btn btn-default">F10</button>
-			<button type="button" class="btn btn-default">F11</button>
-			<button type="button" class="btn btn-default">F12</button>
-			<button type="button" class="btn btn-default">F13</button>
-			<button type="button" class="btn btn-default">F14</button>
-			<button type="button" class="btn btn-default">F15</button>
-			<button type="button" class="btn btn-default">F16</button>
-			<button type="button" class="btn btn-default">F17</button>
-			<button type="button" class="btn btn-default">F18</button>
-			<button type="button" class="btn btn-default">F19</button>
-			<button type="button" class="btn btn-default">F20</button>
-			
-		</div>
 	</div> <!-- /container -->
 	<!-- Bootstrap core JavaScript
 	================================================== -->
@@ -132,6 +62,10 @@
 	<script src="js/ie10-viewport-bug-workaround.js"></script>
 	
 	<script src="js/jquery-sortable.js"></script>
+	<script src="js/freetype.js"></script>
+	<script src="js/bwipp.js"></script>
+	<script src="js/bwipjs.js"></script>
+	<script src="js/bitmap.js"></script>
 	<script src="js/barcowned.js"></script>
 </body>
 </html>
