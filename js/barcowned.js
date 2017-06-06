@@ -54,19 +54,25 @@ var models = {
 				stringatposition: {
 					type: "charmap",
 					sendendmessage: true,
-					prefix: "6C200",
+					enterconfig: "6C200",
+					exitconfig: "",
+					prefix: "",
 					postfix: ""
 				},
 				stringatstart: {
 					type: "charmap",
 					sendendmessage: true,
-					prefix: "6C201",
+					enterconfig: "6C201",
+					exitconfig: "",
+					prefix: "",
 					postfix: ""
 				},
 				stringsearch: {
 					type: "charmap",
 					sendendmessage: true,
-					prefix: "6C202",
+					enterconfig: "6C202",
+					exitconfig: "",
+					prefix: "",
 					postfix: ""
 				}
 			},
@@ -77,31 +83,54 @@ var models = {
 				sendcontrol: {
 					type: "multiple", // each char in input creates a new barcode, runs process with one char
 					sendendmessage: true,
-					process: function(input) { // TODO: change this to callback instead of return
-						var prefix = "6A1441";
+					prefix: "6A1441",
+					process: function(input, adf, callback) { // TODO: change this to callback instead of return
 						// example output: 2=00 A=01 B=02 Z=1A [=1B
-						
 						// non-alphabet
-						if (input == "2") return prefix + "00";
-						if (input == "[") return prefix + "1B";
-						if (input == "\\") return prefix + "1C";
-						if (input == "]") return prefix + "1D";
-						if (input == "6") return prefix + "1E";
-						if (input == "-") return prefix + "1F";
+						if (input == "2") callback("00");
+						if (input == "[") callback("1B");
+						if (input == "\\") callback("1C");
+						if (input == "]") callback("1D");
+						if (input == "6") callback("1E");
+						if (input == "-") callback("1F");
 						
 						input = input.toUpperCase().charCodeAt(0); // convert to ASCII code
 						if (input >= 65 && input <= 90) { // A-Z
-							return prefix + pad((input - 64).toString(16), 2, "0"); // wait need to convert to hex
+							callback(pad((input - 64).toString(16), 2, "0")); // wait need to convert to hex
 						}
+					}
+				},
+				pauseduration: {
+					type: "single",
+					enterconfig: "30C0D20063",
+					prefix: "A",
+					process: function(input, adf, callback) {
+						// 1.0 duration would be A1, A0
+						callback(Math.floor(input));
+						callback(Math.floor((input % 1).toFixed(1) * 10));
+					}
+				},
+				sendgui: {
+					type: "charmap",
+					prefix: "6A1443"
+				},
+				sendpause: "6A118",
+				sendenter: "6A14470D",
+				sendremaining: "6A110",
+				skipcharacters: {
+					type: "single",
+					prefix: "6A1433",
+					process: function(input, adf, callback) {
+						callback(pad(input, 2, "0"));
 					}
 				}
 			},
 			mapcharacter: {
 				type: "multiple", // each char in input creates a new barcode, runs process with one char
-				process: function(input) { // ADF doesn't take normal keys...
+				process: function(input, adf, callback) { // ADF doesn't take normal keys...
 					// example output: space=20 #=23 $=24 +=2B
 					// straight hex of ASCII
-					return "B" + pad(input.toString(16), 2, "0");
+					callback("B" + pad(input.charCodeAt(0).toString(16).toUpperCase(), 2, "0"));
 				}
 			}
 			
@@ -127,39 +156,46 @@ var example = {
 				["stringatstart", "`1"]
 			],
 			actions: [
-				["sendtext", "test"],
-				["sendcontrol", "S"]
+				["pauseduration", 1.0], // in seconds
+				["sendgui", "R"],
+				["sendpause"],
+				["sendtext", "cmd"],
+				["sendenter"],
+				["sendpause"],
+				["skipcharacters", 2], // skip over `1
+				["sendremaining"], // send what's left in the barcode
+				["sendenter"]
 			]
 		}
 	],
 	payload: [
 		"`1calc.exe",
-		"8*17*39103"
 	]
 };
 
 /*
 	Example of a `1 rule that types Win+R, cmd.exe, the barcode, then enter
 
-	"^FNC37B1211", // begin new rule
-	"^FNC36C201", // specific string at start (max 8)
-	"^FNC3B60", // `
-	"^FNC3B31", // 1
-	"^FNC3B+", // end of message
-	"^FNC330C0D20063", // specify pause duration
-	"^FNC3A1", "^FNC3A5", // 1.0 second delay
-	"^FNC36A144352", // send Win + R
-	"^FNC36A118", // send pause
-	"^FNC3B63", // c
-	"^FNC3B6D", // m
-	"^FNC3B64", // d
-	"^FNC36A14470D", // send enter
-	"^FNC36A118", // send pause
-	"^FNC36A143302", // skip ahead 2 characters (ignoring `1 at start)
-	"^FNC36A110", // send all data that remains
-	"^FNC36A14470D", // send enter
-	"^FNC3B+", // end of message
-	"^FNC34" // save rule
+	"^FNC380",			// erase all rules
+	"^FNC37B1211",		// begin new rule
+	"^FNC36C201",		// specific string at start (max 8)
+	"^FNC3B60",			// `
+	"^FNC3B31",			// 1
+	"^FNC3B+",			// end of message
+	"^FNC330C0D20063",	// specify pause duration
+	"^FNC3A1",			// 1
+	"^FNC3A0",			// 0 (1.0 second delay)
+	"^FNC36A144352",	// send Win + R
+	"^FNC36A118",		// send pause
+	"^FNC3B63",			// c
+	"^FNC3B6D",			// m
+	"^FNC3B64",			// d
+	"^FNC36A14470D",	// send enter
+	"^FNC36A118",		// send pause
+	"^FNC36A143302",	// skip ahead 2 characters (ignoring `1 at start)
+	"^FNC36A110",		// send all data that remains in barcode
+	"^FNC36A14470D",	// send enter
+	"^FNC34"			// save rule
 */
 
 function addBarcode(text, symbology, options) {
@@ -212,19 +248,34 @@ function runModelFunction(params, modelfunc, adf, callback) {
 	if (modelfunc.postfix)
 		postfix = modelfunc.postfix;
 	
-	if (modelfunc.type == "single") { // function does everything
-		callback(prefix + modelfunc.process(params, adf) + postfix);
-	} else if (modelfunc.type == "charmap") {
-		runModelFunction(params, adf.mapcharacter, adf, function callbackextra(code) {
-			// make sure the prefix and postfix make it into the recursive function
+	if (modelfunc.enterconfig)
+		callback(modelfunc.enterconfig); // don't think this should be prefixed
+	
+	var param = "";
+	if (params.length > 0)
+		param = params[0]; // we only take the first one
+	
+	if (modelfunc.constructor == String || modelfunc.type == "static") { // it's just a string, send that
+		callback(prefix + modelfunc + postfix);
+	} else if (modelfunc.type == "single") { // function does everything
+		modelfunc.process(param, adf, function callbackextra(code) {
+			// make sure the prefix and postfix make it in
 			callback(prefix + code + postfix);
 		});
+	} else if (modelfunc.type == "charmap") {
+		for (var i = 0; i < param.length; i++) {
+			adf.mapcharacter.process(param[i], adf, function callbackextra(code) {
+				// make sure the prefix and postfix make it in
+				callback(prefix + code + postfix);
+			});
+		}
 	} else if (modelfunc.type == "multiple") {
 		// we have to run for each character
-		// we only do this for the first param because when else would the madness stop?
-		var chars = params[0];
-		for (var i = 0; i < chars.length; i++) {
-			callback(prefix + modelfunc.process(chars[i], params, adf) + postfix);
+		for (var i = 0; i < param.length; i++) {
+			modelfunc.process(param[i], adf, function callbackextra(code) {
+				// make sure the prefix and postfix make it in
+				callback(prefix + code + postfix);
+			});
 		}
 	}
 	
@@ -233,6 +284,9 @@ function runModelFunction(params, modelfunc, adf, callback) {
 		// as endmessage is not specific to a single criteria/action
 		callback(adf.endmessage);
 	}
+	
+	if (modelfunc.exitconfig)
+		callback(modelfunc.exitconfig); // don't think this should be prefixed
 }
 	
 
@@ -396,38 +450,9 @@ function generateBarcodes(model, script) {
 
 $(function () {	
 	var codes = generateBarcodes(models.symbolds6707, example);
-	console.log(codes);
 	bw = new BWIPJS(Module, false);
 	for (var i = 0; i < codes.length; i++) {
+		console.log(codes[i].barcode);
 		addBarcode(codes[i].barcode, codes[i].symbology, codes[i].bwippoptions);
 	}
-	
-	/*
-	if (script.setup.length > 0) {
-		for (var i = 0; i < model.setup.enterconfig.length; i++)
-		{
-			addBarcode(model.setup.prefix + model.setup.enterconfig[i] + model.setup.postfix, model.setup.symbology, model.bwippoptions);
-		}
-		for (var i = 0; i < script.setup.length; i++)
-		{
-			addBarcode(model.setup.prefix + script.setup[i] + model.setup.postfix, model.setup.symbology, model.bwippoptions);
-		}
-		for (var i = 0; i < model.setup.exitconfig.length; i++)
-		{
-			addBarcode(model.setup.prefix + model.setup.exitconfig[i] + model.setup.postfix, model.setup.symbology, model.bwippoptions);
-		}
-	}
-	
-	for (var i = 0; i < script.replacements.length; i++)
-	{
-		for (var j = 0; j < script.replacements[i].length; j++)
-		{
-			addBarcode(script.replacements[i][j],  model.setup.symbology, model.bwippoptions);
-		}
-	}
-	
-	for (var i = 0; i < script.payload.length; i++)
-	{
-		addBarcode(script.payload[i], script.symbology, model.bwippoptions);
-	}*/
 });
