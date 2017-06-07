@@ -28,26 +28,25 @@
 </head>
 
 <body>
-
 	<!-- Fixed navbar -->
 	<nav class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
-		<div class="navbar-header">
-		<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-			<span class="sr-only">Toggle navigation</span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-		</button>
-		<a class="navbar-brand" href="#">BarcOwned</a>
+		<div class="container">
+			<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="#">BarcOwned</a>
+			</div>
+			<div id="navbar" class="navbar-collapse collapse">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="#">Home</a></li>
+				<li><a href="https://github.com/T3hUb3rK1tten/barcowned">GitHub</a></li>
+			</ul>
+			</div><!--/.nav-collapse -->
 		</div>
-		<div id="navbar" class="navbar-collapse collapse">
-		<ul class="nav navbar-nav">
-			<li class="active"><a href="#">Home</a></li>
-			<li><a href="https://github.com/T3hUb3rK1tten/barcowned">GitHub</a></li>
-		</ul>
-		</div><!--/.nav-collapse -->
-	</div>
 	</nav>
 	<div class="container" role="main">
 		<ol id="barcodes">
@@ -67,5 +66,53 @@
 	<script src="js/bwipjs.js"></script>
 	<script src="js/bitmap.js"></script>
 	<script src="js/barcowned.js"></script>
+	<script src="js/barcowned-models.js"></script>
+	<script type="text/javascript">
+		var cmd = {
+			options: [
+				"eraseallrules"
+			],
+			adf: [
+				{
+					criteria: [
+						["stringatstart", "`1"]
+					],
+					actions: [
+						["pauseduration", 1.0], // in seconds
+						["sendgui", "R"],
+						["sendpause"],
+						["sendtext", "cmd"],
+						["sendenter"],
+						["sendpause"],
+						["skipcharacters", 2], // skip over `1
+						["sendremaining"], // send what's left in the barcode
+						["sendenter"]
+					]
+				}
+			],
+			payload: [
+				"`1calc.exe",
+			]
+		};
+	
+		$(function () {	
+			var bw = new BWIPJS(Module, true);
+			bw.scale(3,3);
+			var barcodeNumber = 0;
+			
+			generateBarcodes(models.symbolds6707, cmd, function (code, symbology, bwippoptions) {
+				console.log(code);
+				
+				var canvas = $("<canvas/>", { id: "barcode-" + barcodeNumber});
+				$("#barcodes").append($("<li>").append(canvas));
+				var rawcanvas = canvas[0];
+				
+				bw.bitmap(new Bitmap);
+				BWIPP()(bw, symbology, code, bwippoptions);
+				bw.bitmap().show(rawcanvas, "N"); // "normal"
+				barcodeNumber++;
+			});
+		});
+	</script>
 </body>
 </html>
