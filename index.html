@@ -42,7 +42,8 @@
 			</div>
 			<div id="navbar" class="navbar-collapse collapse">
 			<ul class="nav navbar-nav">
-				<li class="active"><a href="#">Home</a></li>
+				<li class="active"><a href="#">Setup</a></li>
+				<li><a href="#">Payload</a></li>
 				<li><a href="https://github.com/T3hUb3rK1tten/barcowned">GitHub</a></li>
 			</ul>
 			</div><!--/.nav-collapse -->
@@ -68,7 +69,7 @@
 	<script src="js/barcowned.js"></script>
 	<script src="js/barcowned-models.js"></script>
 	<script type="text/javascript">
-		var cmd = {
+		var setup = {
 			options: [
 				"eraseallrules"
 			],
@@ -88,30 +89,48 @@
 						["sendremaining"], // send what's left in the barcode
 						["sendenter"]
 					]
+				},
+				
+				{
+					criteria: [
+						["stringatstart", "`2"]
+					],
+					actions: [
+						["sendenter"]
+					]
 				}
 			],
+		};
+		
+		var script = {
 			payload: [
 				"`1calc.exe",
+				"`2"
 			]
 		};
-	
-		$(function () {	
+		
+		function printBarcodes(element, model, script) {
 			var bw = new BWIPJS(Module, true);
-			bw.scale(3,3);
+			bw.scale(2,1);
 			var barcodeNumber = 0;
 			
-			generateBarcodes(models.symbolds6707, cmd, function (code, symbology, bwippoptions) {
+			generateBarcodes(model, script, function (code, symbology, bwippoptions) {
 				console.log(code);
+				barcodeNumber++;
 				
-				var canvas = $("<canvas/>", { id: "barcode-" + barcodeNumber});
-				$("#barcodes").append($("<li>").append(canvas));
-				var rawcanvas = canvas[0];
+				var canvas = $("<canvas/>", { id: "canvas-" + barcodeNumber});
+				$(element).append($("<li>").append(canvas));
+				var rawcanvas = canvas[0]; // Bitmap doesn't like jQuery element
 				
 				bw.bitmap(new Bitmap);
 				BWIPP()(bw, symbology, code, bwippoptions);
 				bw.bitmap().show(rawcanvas, "N"); // "normal"
-				barcodeNumber++;
 			});
+		}
+	
+		$(function () {
+			printBarcodes($("#barcodes"), models.symbolds6707, setup);
+			printBarcodes($("#barcodes"), models.symbolds6707, script);
 		});
 	</script>
 </body>
