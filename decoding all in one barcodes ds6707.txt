@@ -1,0 +1,27 @@
+N5	// standard barcode programming follows?
+	92 // factory defaults
+N5
+	80 // erase rules?
+N6	// nonstandard barcode programming follows?
+	S2681000 // config name I guess
+		Nameaaaaaaaaaend
+N5
+	7B1211 // begin rule
+	6C199 01 02 // string at pos, pos 01, length of next 02
+		60 // `
+		31 // 1
+	6A1444 // special key pf
+		05 // 5
+	6A14E50A // send pause 1.0 seconds?
+	6A1441 // send ascii
+		63 // c
+	6A1441 // send ascii
+		6D // m
+	6A1441 // send ascii
+		64 // d
+	6A14470D
+	6A14E50A
+	6A143302
+	6A110
+	6A14470D
+	4 // end rule
