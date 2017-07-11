@@ -96,7 +96,7 @@ var models = {
 						
 						input = input.toUpperCase().charCodeAt(0); // convert to ASCII code
 						if (input >= 65 && input <= 90) { // A-Z
-							callback(pad((input - 64).toString(16), 2, "0")); // wait need to convert to hex
+							callback(pad((input - 64).toString(16), 2, "0")); // convert shifted ASCII to hex
 						}
 					}
 				},
