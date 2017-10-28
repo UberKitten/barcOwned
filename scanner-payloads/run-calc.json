@@ -1,0 +1,7 @@
+{
+  "name": "Run calc.exe",
+
+  "payload": [
+    "`1 calc.exe"
+  ]
+}
