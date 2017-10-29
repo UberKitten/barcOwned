@@ -116,7 +116,7 @@ jQuery(($) => {
       }
 
       const barcodeWriter = new BWIPJS(Module, true)
-      barcodeWriter.scale(2, 1)
+      barcodeWriter.scale($('.display').width() / 156, 2)
 
       const barcode = barcodes[currentBarcode]
       const canvas = barcodeCanvas.get(0)
