@@ -1,0 +1,38 @@
+.navbar hr {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+main {
+  padding-top: 2rem;
+}
+
+.run {
+  display: none;
+}
+
+.controls form {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 576px) {
+  .controls form {
+    flex-direction: row;
+  }
+}
+
+.controls .form-group {
+  display: flex;
+  flex-direction: column;
+  margin: 0.5rem;
+}
+
+.controls .custom-select {
+  max-width: 18rem;
+}
+
+.display {
+  margin-top: 2rem;
+  max-width: 600px;
+}

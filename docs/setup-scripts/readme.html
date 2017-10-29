@@ -1,0 +1,325 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Setup Scripts · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/website.css">
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="../contributing/readme.html" />
+    
+    
+    <link rel="prev" href="../payloads/readme.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Overview
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../payloads/readme.html">
+            
+                <a href="../payloads/readme.html">
+            
+                    
+                    Payloads
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3" data-path="readme.html">
+            
+                <a href="readme.html">
+            
+                    
+                    Setup Scripts
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../contributing/readme.html">
+            
+                <a href="../contributing/readme.html">
+            
+                    
+                    Contributing
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Setup Scripts</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="setup-scripts">Setup Scripts</h1>
+<p>A setup script modifies the configuration of the barcode scanner and allows
+you to set up rules before injecting a payload.</p>
+<h2 id="file-structure">File structure</h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>String</td>
+<td>Script name, used in UI</td>
+</tr>
+<tr>
+<td>setup</td>
+<td>Object</td>
+<td></td>
+</tr>
+<tr>
+<td>setup.options</td>
+<td>Array</td>
+<td>Options to enable on scanner</td>
+</tr>
+<tr>
+<td>setup.adf</td>
+<td>Array</td>
+<td>Rules to install on scanner</td>
+</tr>
+</tbody>
+</table>
+<p><code>setup.options</code> is an array of strings</p>
+<p><code>setup.adf</code> contains an array of rules to install</p>
+<h3 id="rule-structure">Rule structure</h3>
+<p>Each rule has two keys, <code>criteria</code> and <code>actions</code></p>
+<p>The <code>criteria</code> contains an array of criteria to match on in the format</p>
+<pre><code>[&quot;stringatstart&quot;, &quot;`1&quot;]
+</code></pre><p>where the first element is the match type and second is the string to match on</p>
+<h2 id="creating-a-setup-script">Creating a setup script</h2>
+<p>Create a new <code>.json</code> file in the <code>scanner-setup-scripts</code> directory for your script</p>
+<p>Set the <code>name</code> key to a name for the script in the interface</p>
+<p>Add your rules to be used with your <a href="../payloads/readme.html">payload</a></p>
+<h3 id="manifest">Manifest</h3>
+<p>Next, create a <code>manifest.json</code> file in the <code>scanner-setup-scripts</code> directory</p>
+<p>This file just contains the names of your payload files, like this</p>
+<pre><code>[
+  &quot;run-cmd.json&quot;,
+  &quot;another-script.json&quot;
+]
+</code></pre><p>It will be automatically loaded by the interface, where you will be able
+to choose which script to use</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="../payloads/readme.html" class="navigation navigation-prev " aria-label="Previous page: Payloads">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="../contributing/readme.html" class="navigation navigation-next " aria-label="Next page: Contributing">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Setup Scripts","level":"1.3","depth":1,"next":{"title":"Contributing","level":"1.4","depth":1,"path":"contributing/readme.md","ref":"contributing/readme.md","articles":[]},"previous":{"title":"Payloads","level":"1.2","depth":1,"path":"payloads/readme.md","ref":"payloads/readme.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup-scripts/readme.md","mtime":"2017-10-29T12:39:00.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-10-29T12:39:18.457Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

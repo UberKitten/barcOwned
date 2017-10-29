@@ -1,0 +1,13 @@
+{
+  "root": "_docs_src",
+  "output": "docs",
+  "plugins": [ "github", "-sharing" ],
+  "pluginsConfig": {
+    "github": {
+      "url": "https://github.com/T3hUb3rK1tten/barcowned"
+    }
+  },
+  "styles": {
+    "website": "_docs_src/styles/website.css"
+  }
+}

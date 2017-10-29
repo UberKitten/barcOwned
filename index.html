@@ -1,137 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="">
-	<meta name="author" content="">
-	<link rel="icon" href="favicon.ico">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Payload delivery using barcode scanners">
+  <meta name="author" content="Michael West and Colin Campbell">
+  <link rel="icon" href="favicon.ico">
+  <link rel="shortcut icon" type="image/png" href="images/favicon.png"/>
 
-	<title>BarcOwned</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/barcOwned.css">
 
-	<!-- Bootstrap core CSS -->
-	<link href="css/bootstrap.min.css" rel="stylesheet">
-	<!-- Bootstrap theme -->
-	<link href="css/bootstrap-theme.min.css" rel="stylesheet">
-	<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-	<link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
-
-	<!-- Custom styles for this template -->
-	<link href="css/theme.css" rel="stylesheet">
-
-	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-	<!--[if lt IE 9]>
-	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-	<![endif]-->
+  <title>barcOwned</title>
 </head>
 
-<body>
-	<!-- Fixed navbar -->
-	<nav class="navbar navbar-inverse navbar-fixed-top">
-		<div class="container">
-			<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="#">BarcOwned</a>
-			</div>
-			<div id="navbar" class="navbar-collapse collapse">
-			<ul class="nav navbar-nav">
-				<li class="active"><a href="#">Setup</a></li>
-				<li><a href="#">Payload</a></li>
-				<li><a href="https://github.com/T3hUb3rK1tten/barcowned">GitHub</a></li>
-			</ul>
-			</div><!--/.nav-collapse -->
-		</div>
-	</nav>
-	<div class="container" role="main">
-		<ol id="barcodes">
-		</ol>
-	</div> <!-- /container -->
-	<!-- Bootstrap core JavaScript
-	================================================== -->
-	<!-- Placed at the end of the document so the pages load faster -->
-	<script src="js/jquery-1.12.4.min.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-	<script src="js/ie10-viewport-bug-workaround.js"></script>
-	
-	<script src="js/jquery-sortable.js"></script>
-	<script src="js/freetype.js"></script>
-	<script src="js/bwipp.js"></script>
-	<script src="js/bwipjs.js"></script>
-	<script src="js/bitmap.js"></script>
-	<script src="js/barcowned.js"></script>
-	<script src="js/barcowned-models.js"></script>
-	<script type="text/javascript">
-		var setup = {
-			options: [
-				"eraseallrules"
-			],
-			adf: [
-				{
-					criteria: [
-						["stringatstart", "`1"]
-					],
-					actions: [
-						["pauseduration", 1.0], // in seconds
-						["sendgui", "R"],
-						["sendpause"],
-						["sendtext", "cmd"],
-						["sendenter"],
-						["sendpause"],
-						["skipcharacters", 2], // skip over `1
-						["sendremaining"], // send what's left in the barcode
-						["sendenter"]
-					]
-				},
-				
-				{
-					criteria: [
-						["stringatstart", "`2"]
-					],
-					actions: [
-						["sendenter"]
-					]
-				}
-			],
-		};
-		
-		var script = {
-			payload: [
-				"`1calc.exe",
-				"`2"
-			]
-		};
-		
-		function printBarcodes(element, model, script) {
-			var bw = new BWIPJS(Module, true);
-			bw.scale(2,1);
-			var barcodeNumber = 0;
-			
-			generateBarcodes(model, script, function (code, symbology, bwippoptions) {
-				console.log(code);
-				barcodeNumber++;
-				
-				var canvas = $("<canvas/>", { id: "canvas-" + barcodeNumber});
-				$(element).append($("<li>").append(canvas));
-				var rawcanvas = canvas[0]; // Bitmap doesn't like jQuery element
-				
-				bw.bitmap(new Bitmap);
-				BWIPP()(bw, symbology, code, bwippoptions);
-				bw.bitmap().show(rawcanvas, "N"); // "normal"
-			});
-		}
-	
-		$(function () {
-			printBarcodes($("#barcodes"), models.symbolds6707, setup);
-			printBarcodes($("#barcodes"), models.symbolds6707, script);
-		});
-	</script>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <a class="navbar-brand" href="">barcOwned</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent"
+      aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav mr-auto internal-links">
+        <li class="nav-item active">
+          <a class="nav-link" href="#setup"><i class="fa fa-cog" aria-hidden="true"></i> Setup</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#run"><i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i> Run</a>
+        </li>
+      </ul>
+
+      <hr class="d-block d-lg-none">
+
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="docs" target="_blank"><i class="fa fa-book" aria-hidden="true"></i> Docs</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/T3hUb3rK1tten/barcowned" target="_blank"><i class="fa fa-github" aria-hidden="true"></i> Source</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container-fluid">
+    <section class="setup">
+      <div class="controls">
+        <form>
+          <div class="form-group">
+            <label for="barcodeScannerSelect">Scanner Model</label>
+            <select class="custom-select" id="barcodeScannerSelect"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="setupScriptSelect">Setup Script</label>
+            <select class="custom-select" id="setupScriptSelect">
+              <option selected value="0">None</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="payloadScriptSelect">Payload Script</label>
+            <select class="custom-select" id="payloadScriptSelect"></select>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="run">
+      <div class="controls">
+        <button type="button" class="btn btn-success" id="runButton">Start</button>
+        <button type="button" class="btn btn-outline-dark" id="stopButton" disabled>Stop</button>
+
+        <form>
+          <div class="form-group">
+            <label for="runDelaySelect">Start Delay</label>
+            <select class="custom-select" id="runDelaySelect">
+              <option value="0">No Delay</option>
+              <option value="1">1 Second</option>
+              <option value="2">2 Seconds</option>
+              <option selected value="3">3 Seconds</option>
+              <option value="4">4 Seconds</option>
+              <option value="5">5 Seconds</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="updateRateSelect">Update speed</label>
+            <select class="custom-select" id="updateRateSelect">
+              <option selected value="1">1Hz</option>
+              <option value="2">2Hz</option>
+              <option value="3">3Hz</option>
+              <option value="4">4Hz</option>
+              <option value="5">5Hz</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="display">
+        <canvas id="barcodeCanvas"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/lib/jquery-3.2.1.min.js"></script>
+  <script src="js/lib/popper.min.js"></script>
+  <script src="js/lib/bootstrap.min.js"></script>
+
+  <script src="js/lib/freetype.min.js"></script>
+  <script src="js/lib/bwipp.min.js"></script>
+  <script src="js/lib/bwipjs.min.js"></script>
+  <script src="js/lib/bitmap.min.js"></script>
+
+  <script src="js/lib/barcowned.js"></script>
+  <script src="js/lib/barcowned-models/symbolDS6707.js"></script>
+
+  <script src="js/main.js"></script>
 </body>
 </html>
