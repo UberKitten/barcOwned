@@ -16,7 +16,7 @@ For instructions on building barcOwned and submitting patches, see [the docs](ht
 
 Open source under the [MIT License](license.md)
 
-The project also includes other open source software licensed under the MIT license
+The project also includes the following other open source software
 
 |                       Project                     |    License   |
 |                          -                        |       -      |
