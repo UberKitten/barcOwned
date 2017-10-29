@@ -72,6 +72,31 @@
       <div class="controls">
         <button type="button" class="btn btn-success" id="runButton">Start</button>
         <button type="button" class="btn btn-outline-dark" id="stopButton" disabled>Stop</button>
+
+        <form>
+          <div class="form-group">
+            <label for="runDelaySelect">Start Delay</label>
+            <select class="custom-select" id="runDelaySelect">
+              <option value="0">No Delay</option>
+              <option value="1">1 Second</option>
+              <option value="2">2 Seconds</option>
+              <option selected value="3">3 Seconds</option>
+              <option value="4">4 Seconds</option>
+              <option value="5">5 Seconds</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="updateRateSelect">Update speed</label>
+            <select class="custom-select" id="updateRateSelect">
+              <option selected value="1">1Hz</option>
+              <option value="2">2Hz</option>
+              <option value="3">3Hz</option>
+              <option value="4">4Hz</option>
+              <option value="5">5Hz</option>
+            </select>
+          </div>
+        </form>
       </div>
 
       <div class="display">

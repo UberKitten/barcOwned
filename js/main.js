@@ -10,6 +10,8 @@ jQuery(($) => {
   const barcodeScannerSelect = $('#barcodeScannerSelect')
   const setupScriptSelect = $('#setupScriptSelect')
   const payloadScriptSelect = $('#payloadScriptSelect')
+  const runDelaySelect = $('#runDelaySelect')
+  const updateRateSelect = $('#updateRateSelect')
 
   const internalLinkContainers = $('.internal-links')
 
@@ -85,7 +87,7 @@ jQuery(($) => {
       })
     }
 
-    setTimeout(displayBarcodes, 3000)
+    setTimeout(displayBarcodes, parseInt(runDelaySelect.val()) * 1000)
   }
 
   function stop () {
@@ -126,7 +128,7 @@ jQuery(($) => {
 
       currentBarcode++
 
-      const rotationSpeedHz = 5 // Number of times per second to rotate barcode
+      const rotationSpeedHz = updateRateSelect.val()
       setTimeout(rotateBarcode, parseInt(1000 / rotationSpeedHz))
     }
 

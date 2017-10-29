@@ -165,14 +165,23 @@ function runModelFunction (params, modelfunc, adf) {
     }
   } else if (modelfunc.type === 'charmap') {
     params.forEach((param) => {
-      const code = runModelFunction([param], adf.mapcharacter, adf)
-      barcodes.push(prefix.concat(code).concat(postfix))
+      const codes = runModelFunction([param], adf.mapcharacter, adf)
+
+      if (Array.isArray(codes)) {
+        codes.forEach((code) => {
+          barcodes.push(prefix.concat(code).concat(postfix))
+        })
+      } else {
+        barcodes.push(prefix.concat(codes).concat(postfix))
+      }
     })
   } else if (modelfunc.type === 'multiple') {
     // we have to run for each character
     params.forEach((param) => {
-      const code = modelfunc.process(param, adf)
-      barcodes.push(prefix.concat(code).concat(postfix))
+      param.split('').forEach((char) => {
+        const code = modelfunc.process(char, adf)
+        barcodes.push(prefix.concat(code).concat(postfix))
+      })
     })
   } else {
     throw new Error(`Unrecognized model function type ${modelfunc.type}`)

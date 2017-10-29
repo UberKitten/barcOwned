@@ -8,8 +8,8 @@ if (barcOwned && barcOwned.models) {
       symbology: 'code128',
       prefix: '^FNC3',
       postfix: '',
-      enterconfig: [''],
-      exitconfig: [''],
+      enterconfig: [],
+      exitconfig: [],
       options: {
         scanpresentation: ['2050207'], // Presentation mode scanning ("Blink")
         enableparameterscanning: ['1040601'], // Enable parameter scanning
@@ -40,7 +40,7 @@ if (barcOwned && barcOwned.models) {
           type: 'charmap',
           sendendmessage: true,
           enterconfig: ['6C201'],
-          exitconfig: [''],
+          exitconfig: [],
           prefix: 'B',
           postfix: ''
         },
@@ -48,7 +48,7 @@ if (barcOwned && barcOwned.models) {
           type: 'charmap',
           sendendmessage: true,
           enterconfig: ['6C202'],
-          exitconfig: [''],
+          exitconfig: [],
           prefix: 'B',
           postfix: ''
         }
