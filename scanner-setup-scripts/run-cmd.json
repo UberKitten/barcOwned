@@ -1,0 +1,36 @@
+{
+  "name": "Map Win+R cmd",
+
+  "setup": {
+    "options": [
+      "eraseallrules"
+    ],
+    "adf": [
+      {
+        "criteria": [
+          ["stringatstart", "`1"]
+        ],
+        "actions": [
+          ["pauseduration", 1.0],
+          ["sendgui", "R"],
+          ["sendpause"],
+          ["sendtext", "cmd"],
+          ["sendenter"],
+          ["sendpause"],
+          ["skipcharacters", 2],
+          ["sendremaining"],
+          ["sendenter"]
+        ]
+      },
+
+      {
+        "criteria": [
+          ["stringatstart", "`2"]
+        ],
+        "actions": [
+          ["sendenter"]
+        ]
+      }
+    ]
+  }
+}

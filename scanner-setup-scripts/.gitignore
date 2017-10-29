@@ -1,0 +1,9 @@
+/*
+!.gitignore
+!readme.md
+
+# Default example scripts
+
+!run-cmd.json
+
+!manifest.example.json

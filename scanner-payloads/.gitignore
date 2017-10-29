@@ -1,0 +1,9 @@
+/*
+!.gitignore
+!readme.md
+
+# Default example payloads
+
+!run-calc.json
+
+!manifest.example.json
