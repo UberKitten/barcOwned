@@ -71,10 +71,12 @@ jQuery(($) => {
     stopButton.removeAttr('disabled')
 
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
-    const setupScript = Object.assign({ type: 'setup' }, getSetupScriptByName(setupScriptSelect.val()))
+    const setupScript = (setupScriptSelect.val() !== '0') ? Object.assign({ type: 'setup' }, getSetupScriptByName(setupScriptSelect.val())) : null
     const payloadScript = Object.assign({ type: 'payload' }, getPayloadScriptByName(payloadScriptSelect.val()))
 
-    importBarcodeData(barcOwned.getBarcodeData(setupScript, model))
+    if (setupScript) {
+      importBarcodeData(barcOwned.getBarcodeData(setupScript, model))
+    }
     importBarcodeData(barcOwned.getBarcodeData(payloadScript, model))
 
     function importBarcodeData (barcodeData) {
