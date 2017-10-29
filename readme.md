@@ -10,7 +10,7 @@ The markdown source for the docs can be viewed offline in the [`_docs_src`](_doc
 
 ### Contributing
 
-For instructions on building barcOwned and submitting patches, see [the docs](https://t3hub3rk1tten.github.io/barcowned/docs/contributing)
+For instructions on building barcOwned and submitting patches, see [the docs](https://t3hub3rk1tten.github.io/barcowned/docs/contributing/readme.html)
 
 ## License
 
