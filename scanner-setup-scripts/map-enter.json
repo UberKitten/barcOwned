@@ -1,0 +1,17 @@
+{
+  "name": "Map Enter to `05",
+
+  "setup": {
+    "options": [],
+    "adf": [
+      {
+        "criteria": [
+          ["stringatstart", "`05"]
+        ],
+        "actions": [
+          ["sendenter"]
+        ]
+      }
+    ]
+  }
+}
