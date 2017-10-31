@@ -7,5 +7,6 @@
 !map-win-r.json
 !run-win-r.json
 !run-win-r-ps-uac.json
+!map-alt-y.json
 
 !manifest.example.json
