@@ -1,0 +1,22 @@
+{
+  "name": "Run command prefixed by `02 using Win+R",
+
+  "setup": {
+    "options": [],
+    "adf": [
+      {
+        "criteria": [
+          ["stringatstart", "`02"]
+        ],
+        "actions": [
+          ["pauseduration", 1.0],
+          ["sendgui", "R"], // Win + R
+          ["skipcharacters", 3], // Skips `02 in buffer
+          ["sendremaining"],
+          ["sendenter"]
+          ["sendpause"],
+        ]
+      }
+    ]
+  }
+}

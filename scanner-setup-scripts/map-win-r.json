@@ -1,0 +1,17 @@
+{
+  "name": "Map Win+R to `01",
+
+  "setup": {
+    "options": [],
+    "adf": [
+      {
+        "criteria": [
+          ["stringatstart", "`01"]
+        ],
+        "actions": [
+          ["sendgui", "R"], // Win + R
+        ]
+      }
+    ]
+  }
+}
