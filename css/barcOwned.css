@@ -2,6 +2,21 @@
   background-color: rgba(255, 255, 255, 0.5);
 }
 
+@media (max-width: 992px) {
+  .navbar, .navbar-brand {
+    font-size: 0.9rem;
+  }
+
+  .navbar-nav-row {
+    flex-direction: row;
+  }
+
+  .navbar-nav-row > .nav-item {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
 main {
   padding-top: 2rem;
 }
