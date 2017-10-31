@@ -1,3 +1,5 @@
 [
-  "run-cmd.json"
+  "map-win-r.json"
+  "run-win-r.json"
+  "run-win-r-ps-uac.json"
 ]
