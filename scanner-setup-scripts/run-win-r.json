@@ -10,11 +10,11 @@
         ],
         "actions": [
           ["pauseduration", 1.0],
-          ["sendgui", "R"], // Win + R
-          ["skipcharacters", 3], // Skips `02 in buffer
+          ["sendgui", "R"],
+          ["skipcharacters", 3],
           ["sendremaining"],
-          ["sendenter"]
-          ["sendpause"],
+          ["sendenter"],
+          ["sendpause"]
         ]
       }
     ]
