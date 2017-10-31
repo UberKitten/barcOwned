@@ -1,5 +1,6 @@
 [
-  "map-win-r.json"
-  "run-win-r.json"
-  "run-win-r-ps-uac.json"
+  "map-win-r.json", // `01
+  "run-win-r.json", // `02
+  "run-win-r-ps-uac.json", // `03
+  "map-alt-y.json", // `04
 ]
