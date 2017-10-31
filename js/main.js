@@ -153,8 +153,8 @@ jQuery(($) => {
               setupScriptSelect.append(`<option>${script.name}</option>`)
             })
           }
-        }).fail(() => {
-          throw new Error(`Failed to load script ${script}`)
+        }).fail((jqXHR, textStatus, errorThrown) => {
+          throw new Error(`Failed to load script ${script} \n ${errorThrown.message}`)
         })
       })
     })
@@ -172,8 +172,8 @@ jQuery(($) => {
               payloadScriptSelect.append(`<option>${script.name}</option>`)
             })
           }
-        }).fail(() => {
-          throw new Error(`Failed to load script ${script}`)
+        }).fail((jqXHR, textStatus, errorThrown) => {
+          throw new Error(`Failed to load script ${script} \n ${errorThrown.message}`)
         })
       })
     })
