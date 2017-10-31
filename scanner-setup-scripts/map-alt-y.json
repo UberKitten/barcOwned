@@ -1,0 +1,17 @@
+{
+  "name": "Map Alt+Y to `04 (to press Yes on UAC)",
+
+  "setup": {
+    "options": [],
+    "adf": [
+      {
+        "criteria": [
+          ["stringatstart", "`04"]
+        ],
+        "actions": [
+          ["sendalt", "Y"]
+        ]
+      }
+    ]
+  }
+}

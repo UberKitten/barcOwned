@@ -1,0 +1,28 @@
+{
+  "name": "Run command prefixed by `03 using Win+R and UAC bypass with PowerShell",
+
+  "setup": {
+    "options": [],
+    "adf": [
+      {
+        "criteria": [
+          ["stringatstart", "`03"]
+        ],
+        "actions": [
+          ["pauseduration", 1.0],
+          ["sendgui", "R"],
+          ["sendpause"],
+          ["sendtext", "powershell start-process -verb runas "],
+          ["skipcharacters", 3],
+          ["sendremaining"],
+          ["sendenter"],
+          ["pauseduration", 2.0],
+          ["sendpause"],
+          ["sendalt", "Y"],
+          ["sendpause"],
+          ["sendenter"]
+        ]
+      }
+    ]
+  }
+}
