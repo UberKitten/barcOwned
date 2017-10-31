@@ -8,7 +8,7 @@
 !run-win-r.json
 !run-win-r-ps-uac.json
 !map-alt-y.json
-!hello-world-demo.json
+!hello-world-setup.json
 !map-enter.json
 
 !manifest.example.json
