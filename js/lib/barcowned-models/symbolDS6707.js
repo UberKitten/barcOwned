@@ -69,7 +69,7 @@ if (barcOwned && barcOwned.models) {
             }
             return input.toString(16).padStart(2, '0')
           }
-        }
+        },
         sendcontrol: {
           type: 'multiple', // each char in input creates a new barcode, runs process with one char
           sendendmessage: true,

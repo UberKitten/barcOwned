@@ -9,7 +9,7 @@
           ["stringatstart", "`01"]
         ],
         "actions": [
-          ["sendgui", "R"], // Win + R
+          ["sendgui", "R"]
         ]
       }
     ]

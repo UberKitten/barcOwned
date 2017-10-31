@@ -10,17 +10,17 @@
         ],
         "actions": [
           ["pauseduration", 1.0],
-          ["sendgui", "R"], // Win + R
+          ["sendgui", "R"],
           ["sendpause"],
-          ["sendtext" "powershell start-process -verb runas "], // PowerShell command to run as admin
-          ["skipcharacters", 3], // Skips `03 in buffer
-          ["sendremaining"], // Adds command in barcode
+          ["sendtext", "powershell start-process -verb runas "],
+          ["skipcharacters", 3],
+          ["sendremaining"],
           ["sendenter"],
           ["pauseduration", 2.0],
           ["sendpause"],
-          ["sendalt", "Y"], // Presses Yes on UAC dialog
+          ["sendalt", "Y"],
           ["sendpause"],
-          ["sendenter"] // If we already got to a command prompt (no UAC), this clears the "Y" from the prompt
+          ["sendenter"]
         ]
       }
     ]
