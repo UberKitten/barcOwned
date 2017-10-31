@@ -144,17 +144,16 @@ jQuery(($) => {
   function populateSetupScripts () {
     const basePath = 'scanner-setup-scripts'
     getScriptsManifest(basePath, (manifest) => {
-      manifest.forEach((script) => {
-        $.get(`${basePath}/${script}`, (data) => {
+      manifest.forEach((scriptName) => {
+        getScript(basePath, scriptName, (data) => {
           setupScripts.push(data)
 
-          if (manifest.slice(-1)[0] === script) {
+          // If this is the last script, populate UI
+          if (manifest.slice(-1)[0] === scriptName) {
             setupScripts.forEach((script) => {
               setupScriptSelect.append(`<option>${script.name}</option>`)
             })
           }
-        }).fail((jqXHR, textStatus, errorThrown) => {
-          throw new Error(`Failed to load script ${script} \n ${errorThrown.message}`)
         })
       })
     })
@@ -163,17 +162,16 @@ jQuery(($) => {
   function populatePayloadScripts () {
     const basePath = 'scanner-payloads'
     getScriptsManifest(basePath, (manifest) => {
-      manifest.forEach((script) => {
-        $.get(`${basePath}/${script}`, (data) => {
+      manifest.forEach((scriptName) => {
+        getScript(basePath, scriptName, (data) => {
           payloadScripts.push(data)
 
-          if (manifest.slice(-1)[0] === script) {
+          // If this is the last script, populate UI
+          if (manifest.slice(-1)[0] === scriptName) {
             payloadScripts.forEach((script) => {
               payloadScriptSelect.append(`<option>${script.name}</option>`)
             })
           }
-        }).fail((jqXHR, textStatus, errorThrown) => {
-          throw new Error(`Failed to load script ${script} \n ${errorThrown.message}`)
         })
       })
     })
@@ -202,6 +200,23 @@ jQuery(($) => {
           .fail((jqXHR, textStatus, errorThrown) => {
             throw new Error(errorThrown)
           })
+      })
+  }
+
+  function getScript (basePath, scriptName, cb) {
+    function dataHandler (data) {
+      cb(data)
+    }
+
+    $.ajax({
+      url: `${basePath}/${scriptName}`,
+      dataType: 'json'
+    })
+      .done((data) => {
+        dataHandler(data)
+      })
+      .fail((jqXHR, textStatus, errorThrown) => {
+        throw new Error(`Failed to load script ${scriptName} \n ${errorThrown.message}`)
       })
   }
 
