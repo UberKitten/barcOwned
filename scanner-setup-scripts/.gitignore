@@ -9,5 +9,6 @@
 !run-win-r-ps-uac.json
 !map-alt-y.json
 !hello-world-demo.json
+!map-enter.json
 
 !manifest.example.json
