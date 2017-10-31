@@ -32,7 +32,7 @@ if (barcOwned && barcOwned.models) {
           type: 'charmap',
           sendendmessage: true,
           enterconfig: ['6C200'],
-          exitconfig: '',
+          exitconfig: [],
           prefix: 'B',
           postfix: ''
         },
@@ -58,6 +58,18 @@ if (barcOwned && barcOwned.models) {
           type: 'charmap', // each char in input creates a new barcode
           prefix: 'B'
         },
+        sendalt: {
+          type: 'multiple',
+          prefix: '6A1442',
+          process: function (input, adf) {
+            // example output: 2=40 A=41 B=42 Z=5A [=5B
+            // A-Z, [] and \ are hex ASCII, 2 is special, not sure about others
+            if (input == '2') {
+              return '40'
+            }
+            return input.toString(16).padStart(2, '0')
+          }
+        }
         sendcontrol: {
           type: 'multiple', // each char in input creates a new barcode, runs process with one char
           sendendmessage: true,
@@ -110,7 +122,7 @@ if (barcOwned && barcOwned.models) {
           type: 'single',
           prefix: '6A1433',
           process: function (input, adf) {
-            return input.toString().padStart(2, '0')
+            return input.toString(16).padStart(2, '0')
           }
         }
       },
