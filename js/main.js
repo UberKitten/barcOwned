@@ -51,23 +51,33 @@ jQuery(($) => {
 
   internalLinkContainers.find('a').each((idx, link) => {
     const $link = $(link)
-    const activeClass = 'active'
 
     $link.on('click', (event) => {
       event.preventDefault()
 
-      if ($link.attr('href') === '#config') {
+      const href = $link.attr('href')
+
+      if (href === '#config') {
         configUI.show()
         runUI.hide()
-      } else if ($link.attr('href') === '#run') {
+      } else if (href === '#run') {
         configUI.hide()
         runUI.show()
       }
 
-      internalLinkContainers.find('li').removeClass(activeClass)
-      $link.parent().addClass(activeClass)
+      updateInternalLinkStates(href)
     })
   })
+
+  function updateInternalLinkStates (href) {
+    const activeClass = 'active'
+
+    internalLinkContainers.find('li').removeClass(activeClass)
+
+    internalLinkContainers.find(`a[href="${href}"]`).each((idx, link) => {
+      $(link).parent().addClass(activeClass)
+    })
+  }
 
   payloadScriptSelect.on('change', (event) => {
     populateSetupScriptList()
