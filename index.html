@@ -65,19 +65,7 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="runModeSelect">Run Mode</label>
-            <div class="form-row">
-              <div class="btn-group btn-group-selectable" data-selected-class="btn-dark" data-default-class="btn-secondary"
-              data-value="Setup + Payload" role="group" aria-label="Run Mode" id="runModeSelect">
-                <button type="button" class="btn btn-dark">Setup + Payload</button>
-                <button type="button" class="btn btn-secondary">Setup Only</button>
-                <button type="button" class="btn btn-secondary">Payload Only</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group" aria-describedby="setupScriptsHelp">
+          <div class="form-group" aria-describedby="setupScriptsHelp" data-dependency="#runModeSelect=Setup + Payload, Setup Only">
             <small><label for="setupScriptsList">Setup Scripts</label></small>
             <div class="form-row">
               <ul class="list-group" id="setupScriptsList">
@@ -90,6 +78,18 @@
             <small id="setupScriptsHelp" class="form-text help-text text-muted">
               These scripts will be run before the payload to set up ADF rules.
             </small>
+          </div>
+
+          <div class="form-group">
+            <label for="runModeSelect">Run Mode</label>
+            <div class="form-row">
+              <div class="btn-group btn-group-selectable" data-selected-class="btn-dark" data-default-class="btn-secondary"
+              data-value="Setup + Payload" role="group" aria-label="Run Mode" id="runModeSelect">
+                <button type="button" class="btn btn-dark">Setup + Payload</button>
+                <button type="button" class="btn btn-secondary">Setup Only</button>
+                <button type="button" class="btn btn-secondary">Payload Only</button>
+              </div>
+            </div>
           </div>
 
           <div class="form-group" aria-describedby="displayModeHelp">
