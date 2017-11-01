@@ -80,7 +80,25 @@
             </small>
           </div>
 
-          <div class="form-group" aria-describedby="runDelayHelp">
+          <div class="form-group" aria-describedby="displayModeHelp">
+            <label for="displayModeSelect">Display Mode</label>
+            <div class="form-row">
+              <div class="btn-group btn-group-selectable" data-selected-class="btn-dark" data-default-class="btn-secondary"
+              data-value="Auto" role="group" aria-label="Display Mode" id="displayModeSelect">
+                <button type="button" class="btn btn-dark">Auto</button>
+                <button type="button" class="btn btn-secondary">List</button>
+              </div>
+
+              <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+            </div>
+
+            <small id="displayModeHelp" class="form-text help-text text-muted">
+              Auto mode rotates through all barcodes automatically.<br>
+              List mode display all barcodes as a list on screen for printing.
+            </small>
+          </div>
+
+          <div class="form-group" aria-describedby="runDelayHelp" data-dependency="#displayModeSelect=Auto">
             <label for="runDelaySelect">Start Delay</label>
             <div class="form-row">
               <select class="custom-select" id="runDelaySelect">
@@ -98,24 +116,6 @@
             <small id="runDelayHelp" class="form-text help-text text-muted">
               How long to wait before displaying the barcodes.<br>
               Barcodes will be displayed where grey placeholder on the Run page rectangle is.
-            </small>
-          </div>
-
-          <div class="form-group" aria-describedby="displayModeHelp">
-            <label for="displayModeSelect">Display Mode</label>
-            <div class="form-row">
-              <div class="btn-group btn-group-selectable" data-selected-class="btn-dark" data-default-class="btn-secondary"
-              data-value="Auto" role="group" aria-label="Display Mode" id="displayModeSelect">
-                <button type="button" class="btn btn-dark">Auto</button>
-                <button type="button" class="btn btn-secondary">List</button>
-              </div>
-
-              <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
-            </div>
-
-            <small id="displayModeHelp" class="form-text help-text text-muted">
-              Auto mode rotates through all barcodes automatically.<br>
-              List mode display all barcodes as a list on screen for printing.
             </small>
           </div>
 

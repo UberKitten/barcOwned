@@ -96,6 +96,11 @@ main {
   list-style: none;
 }
 
+.barcodes-list .barcode {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
 /* Help text */
 
 .btn-help {
