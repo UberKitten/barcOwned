@@ -146,6 +146,7 @@ jQuery(($) => {
       })
     }
 
+    displayMode === 'Auto' ? barcodeCanvas.show() : barcodeCanvas.hide()
     setTimeout(() => displayBarcodes(displayMode), runDelay)
   }
 
