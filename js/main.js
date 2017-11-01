@@ -12,6 +12,7 @@ jQuery(($) => {
   const payloadScriptSelect = $('#payloadScriptSelect')
   const runDelaySelect = $('#runDelaySelect')
   const displayModeSelect = $('#displayModeSelect')
+  const runModeSelect = $('#runModeSelect')
   const updateRateSelect = $('#updateRateSelect')
   const setupScriptsList = $('#setupScriptsList')
 
@@ -29,7 +30,7 @@ jQuery(($) => {
   //             Button selection functions              //
   /* /////////////////////////////////////////////////// */
 
-  const buttonGroups = [displayModeSelect]
+  const buttonGroups = [displayModeSelect, runModeSelect]
   addBtnGrpValFunction(buttonGroups)
 
   /* /////////////////////////////////////////////////// */
@@ -112,6 +113,7 @@ jQuery(($) => {
     stopButton.removeAttr('disabled')
 
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
+    const runMode = runModeSelect.val()
     const displayMode = displayModeSelect.val()
     const runDelay = displayMode === 'Auto' ? parseInt(runDelaySelect.val()) * 1000 : 0
     const payloadScript = Object.assign({ type: 'payload' }, getPayloadScript({ name: payloadScriptSelect.val() }))
@@ -123,11 +125,15 @@ jQuery(($) => {
       setupScripts.push(Object.assign({ type: 'setup' }, getSetupScript({ scriptName: dependencyName })))
     })
 
-    setupScripts.forEach((setupScript) => {
-      importBarcodeData(barcOwned.getBarcodeData(setupScript, model))
-    })
+    if (runMode === 'Setup Only' || runMode === 'Setup + Payload') {
+      setupScripts.forEach((setupScript) => {
+        importBarcodeData(barcOwned.getBarcodeData(setupScript, model))
+      })
+    }
 
-    importBarcodeData(barcOwned.getBarcodeData(payloadScript, model))
+    if (runMode === 'Payload Only' || runMode === 'Setup + Payload') {
+      importBarcodeData(barcOwned.getBarcodeData(payloadScript, model))
+    }
 
     function importBarcodeData (barcodeData) {
       barcodeData.barcodes.forEach((barcode) => {
