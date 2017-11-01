@@ -58,6 +58,10 @@ main {
   display: none;
 }
 
+.controls button[type="button"] {
+  cursor: pointer;
+}
+
 .controls .list-group {
   display: table-column;
 }
