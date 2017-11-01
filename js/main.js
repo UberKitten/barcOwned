@@ -61,9 +61,11 @@ jQuery(($) => {
       if (href === '#config') {
         configUI.show()
         runUI.hide()
+        stop()
       } else if (href === '#run') {
         configUI.hide()
         runUI.show()
+        run()
       }
 
       updateInternalLinkStates(href)
@@ -101,14 +103,13 @@ jQuery(($) => {
     }
   }
 
-  runButton.on('click', run)
-  stopButton.on('click', stop)
-
   /* /////////////////////////////////////////////////// */
   //                   Core Functions                    //
   /* /////////////////////////////////////////////////// */
 
   function run () {
+    stop()
+
     runButton.attr('disabled', true)
     stopButton.removeAttr('disabled')
 
