@@ -1,3 +1,11 @@
+/* General */
+
+main {
+  padding-top: 2rem;
+}
+
+/* Navbar */
+
 .navbar hr {
   background-color: rgba(255, 255, 255, 0.5);
 }
@@ -17,13 +25,13 @@
   }
 }
 
-main {
-  padding-top: 2rem;
-}
+/* App sections */
 
 .run {
   display: none;
 }
+
+/* Controls */
 
 .controls form {
   display: flex;
@@ -31,10 +39,9 @@ main {
   flex-wrap: wrap;
 }
 
-@media (min-width: 576px) {
-  .controls form {
-    flex-direction: row;
-  }
+.controls .form-row {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .controls .form-group {
@@ -47,7 +54,68 @@ main {
   max-width: 18rem;
 }
 
+.controls [data-dependency] {
+  display: none;
+}
+
+.controls .list-group {
+  display: table-column;
+}
+
+.list-group-item {
+  display: table-row;
+  background-color: transparent;
+}
+
+.list-group-item > span {
+  display: table-cell;
+  padding: 0.5rem;
+  background-color: #eee;
+  color: rgba(100, 100, 100, 0.8);
+  font-size: 0.85rem;
+}
+
+.list-group-item:first-child > span {
+  border-top-left-radius: 0.3rem;
+  border-top-right-radius: 0.3rem;
+}
+
+.list-group-item:last-child > span {
+  border-bottom-left-radius: 0.3rem;
+  border-bottom-right-radius: 0.3rem;
+}
+
+/* Barcode display */
+
 .display {
   margin-top: 2rem;
   max-width: 600px;
+}
+
+.barcodes-list {
+  list-style: none;
+}
+
+/* Help text */
+
+.btn-help {
+  display: flex;
+  align-items: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-size: 1.5rem;
+  color: #868e96;
+}
+
+.btn-help:hover {
+  text-decoration: none;
+  color: #555;
+}
+
+.help-text {
+  display: none;
+}
+
+.help-text.active {
+  display: block;
 }

@@ -1,4 +1,5 @@
-/* global jQuery, barcOwned, BWIPP, BWIPJS, Bitmap, Module */
+/* global jQuery, BWIPP, BWIPJS, Bitmap, Module */
+/* global barcOwned, addBtnGrpValFunction */
 
 jQuery(($) => {
   const setupScripts = []
@@ -8,14 +9,15 @@ jQuery(($) => {
 
   // UI references
   const barcodeScannerSelect = $('#barcodeScannerSelect')
-  const setupScriptSelect = $('#setupScriptSelect')
   const payloadScriptSelect = $('#payloadScriptSelect')
   const runDelaySelect = $('#runDelaySelect')
+  const displayModeSelect = $('#displayModeSelect')
   const updateRateSelect = $('#updateRateSelect')
+  const setupScriptsList = $('#setupScriptsList')
 
   const internalLinkContainers = $('.internal-links')
 
-  const setupUI = $('section.setup')
+  const configUI = $('section.setup')
   const runUI = $('section.run')
 
   const runButton = $('#runButton')
@@ -24,7 +26,14 @@ jQuery(($) => {
   const barcodeCanvas = $('#barcodeCanvas')
 
   /* /////////////////////////////////////////////////// */
-  //           Setup Section Initialization              //
+  //             Button selection functions              //
+  /* /////////////////////////////////////////////////// */
+
+  const buttonGroups = [displayModeSelect]
+  addBtnGrpValFunction(buttonGroups)
+
+  /* /////////////////////////////////////////////////// */
+  //           Config Section Initialization             //
   /* /////////////////////////////////////////////////// */
 
   // Populate scanner models
@@ -36,7 +45,7 @@ jQuery(($) => {
   populatePayloadScripts()
 
   /* /////////////////////////////////////////////////// */
-  //              Link and button handlers               //
+  //                   Event handlers                    //
   /* /////////////////////////////////////////////////// */
 
   internalLinkContainers.find('a').each((idx, link) => {
@@ -46,11 +55,11 @@ jQuery(($) => {
     $link.on('click', (event) => {
       event.preventDefault()
 
-      if ($link.attr('href') === '#setup') {
-        setupUI.show()
+      if ($link.attr('href') === '#config') {
+        configUI.show()
         runUI.hide()
       } else if ($link.attr('href') === '#run') {
-        setupUI.hide()
+        configUI.hide()
         runUI.show()
       }
 
@@ -58,6 +67,27 @@ jQuery(($) => {
       $link.parent().addClass(activeClass)
     })
   })
+
+  payloadScriptSelect.on('change', (event) => {
+    populateSetupScriptList()
+  })
+
+  function populateSetupScriptList () {
+    const payloadScript = getPayloadScript({ name: payloadScriptSelect.val() })
+
+    setupScriptsList.html('')
+
+    if (payloadScript['setup-dependencies']) {
+      payloadScript['setup-dependencies'].forEach((dependency) => {
+        const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
+        const setupScript = getSetupScript({ scriptName: dependencyName })
+
+        setupScriptsList.append(`<li class="list-group-item"><span>${setupScript.name}</span></li>`)
+      })
+    } else {
+      setupScriptsList.append(`<li class="list-group-item"><span>No setup scripts will be run</span></li>`)
+    }
+  }
 
   runButton.on('click', run)
   stopButton.on('click', stop)
@@ -71,12 +101,19 @@ jQuery(($) => {
     stopButton.removeAttr('disabled')
 
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
-    const setupScript = (setupScriptSelect.val() !== '0') ? Object.assign({ type: 'setup' }, getSetupScriptByName(setupScriptSelect.val())) : null
-    const payloadScript = Object.assign({ type: 'payload' }, getPayloadScriptByName(payloadScriptSelect.val()))
+    const payloadScript = Object.assign({ type: 'payload' }, getPayloadScript({ name: payloadScriptSelect.val() }))
+    const setupScripts = []
 
-    if (setupScript) {
+    payloadScript['setup-dependencies'] && payloadScript['setup-dependencies'].forEach((dependency) => {
+      const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
+
+      setupScripts.push(Object.assign({ type: 'setup' }, getSetupScript({ scriptName: dependencyName })))
+    })
+
+    setupScripts.forEach((setupScript) => {
       importBarcodeData(barcOwned.getBarcodeData(setupScript, model))
-    }
+    })
+
     importBarcodeData(barcOwned.getBarcodeData(payloadScript, model))
 
     function importBarcodeData (barcodeData) {
@@ -89,7 +126,7 @@ jQuery(($) => {
       })
     }
 
-    setTimeout(displayBarcodes, parseInt(runDelaySelect.val()) * 1000)
+    setTimeout(() => displayBarcodes(displayModeSelect.val()), parseInt(runDelaySelect.val()) * 1000)
   }
 
   function stop () {
@@ -101,10 +138,22 @@ jQuery(($) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+    $('.barcodes-list').remove()
+
     barcodes = []
   }
 
-  function displayBarcodes () {
+  function displayBarcodes (displayMode) {
+    if (displayMode === 'Auto') {
+      displayBarcodesAuto()
+    } else if (displayMode === 'List') {
+      displayBarcodesList()
+    } else {
+      throw new Error(`Unknown barcode display mode: ${displayMode}`)
+    }
+  }
+
+  function displayBarcodesAuto () {
     let currentBarcode = 0
 
     function rotateBarcode () {
@@ -115,18 +164,8 @@ jQuery(($) => {
         return
       }
 
-      const barcodeWriter = new BWIPJS(Module, true)
-      barcodeWriter.scale($('.display').width() / 156, 2)
-
       const barcode = barcodes[currentBarcode]
-      const canvas = barcodeCanvas.get(0)
-      const ctx = canvas.getContext('2d')
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      barcodeWriter.bitmap(new Bitmap())
-      BWIPP()(barcodeWriter, barcode.symbology, barcode.code, barcode.BWIPPoptions)
-      barcodeWriter.bitmap().show(canvas, 'N') // "normal"
+      drawBarcode(barcode, barcodeCanvas)
 
       currentBarcode++
 
@@ -135,6 +174,30 @@ jQuery(($) => {
     }
 
     rotateBarcode()
+  }
+
+  function displayBarcodesList () {
+    const displayContainer = barcodeCanvas.parent()
+    displayContainer.prepend('<ol class="barcodes-list"></ol>')
+
+    barcodes.forEach((barcode) => {
+      const canvas = $('<li><canvas class="barcode"></canvas></li>')
+      displayContainer.find('.barcodes-list').append(canvas)
+      drawBarcode(barcode, canvas.find('canvas'))
+    })
+  }
+
+  function drawBarcode (barcode, jCanvas) {
+    const canvas = jCanvas.get(0)
+    const ctx = canvas.getContext('2d')
+    const barcodeWriter = new BWIPJS(Module, true)
+    barcodeWriter.scale($('.display').width() / 156, 2)
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    barcodeWriter.bitmap(new Bitmap())
+    BWIPP()(barcodeWriter, barcode.symbology, barcode.code, barcode.BWIPPoptions)
+    barcodeWriter.bitmap().show(canvas, 'N') // "normal"
   }
 
   /* /////////////////////////////////////////////////// */
@@ -146,14 +209,8 @@ jQuery(($) => {
     getScriptsManifest(basePath, (manifest) => {
       manifest.forEach((scriptName) => {
         getScript(basePath, scriptName, (data) => {
+          data.scriptName = scriptName
           setupScripts.push(data)
-
-          // If this is the last script, populate UI
-          if (manifest.slice(-1)[0] === scriptName) {
-            setupScripts.forEach((script) => {
-              setupScriptSelect.append(`<option>${script.name}</option>`)
-            })
-          }
         })
       })
     })
@@ -164,16 +221,31 @@ jQuery(($) => {
     getScriptsManifest(basePath, (manifest) => {
       manifest.forEach((scriptName) => {
         getScript(basePath, scriptName, (data) => {
+          data.scriptName = scriptName
           payloadScripts.push(data)
-
-          // If this is the last script, populate UI
-          if (manifest.slice(-1)[0] === scriptName) {
-            payloadScripts.forEach((script) => {
-              payloadScriptSelect.append(`<option>${script.name}</option>`)
-            })
-          }
+          loadPayload(getPayloadScript({ scriptName }))
         })
       })
+
+      // Verify payload dependencies, and add to UI
+      function loadPayload (script) {
+        let dependenciesMet = true
+
+        script['setup-dependencies'] && script['setup-dependencies'].forEach((dependency) => {
+          const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
+
+          if (!getSetupScript({ scriptName: dependencyName })) {
+            dependenciesMet = false
+          }
+        })
+
+        if (dependenciesMet) {
+          payloadScriptSelect.append(`<option>${script.name}</option>`)
+          populateSetupScriptList()
+        } else {
+          console.warn(`Setup dependencies for payload ${script.name} couldn't be loaded, payload will be unavailable to run`)
+        }
+      }
     })
   }
 
@@ -220,15 +292,31 @@ jQuery(($) => {
       })
   }
 
-  function getSetupScriptByName (scriptName) {
+  function getSetupScript (filter, scriptName) {
     return setupScripts.filter((script) => {
-      return script.name === scriptName
+      let match = true
+
+      Object.getOwnPropertyNames(filter).forEach((filterCondition) => {
+        if (script[filterCondition] !== filter[filterCondition]) {
+          match = false
+        }
+      })
+
+      return match
     })[0]
   }
 
-  function getPayloadScriptByName (scriptName) {
+  function getPayloadScript (filter, scriptName) {
     return payloadScripts.filter((script) => {
-      return script.name === scriptName
+      let match = true
+
+      Object.getOwnPropertyNames(filter).forEach((filterCondition) => {
+        if (script[filterCondition] !== filter[filterCondition]) {
+          match = false
+        }
+      })
+
+      return match
     })[0]
   }
 })

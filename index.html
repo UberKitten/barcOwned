@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Like a Rubber Ducky, but with barcodes">
   <meta name="author" content="Michael West and Colin Campbell">
   <link rel="icon" href="favicon.ico">
@@ -21,7 +21,7 @@
 
     <ul class="navbar-nav navbar-nav-row mr-auto internal-links">
       <li class="nav-item active">
-        <a class="nav-link" href="#setup"><i class="fa fa-cog" aria-hidden="true"></i> Setup</a>
+        <a class="nav-link" href="#config"><i class="fa fa-cog" aria-hidden="true"></i> Config</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="#run"><i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i> Run</a>
@@ -53,19 +53,96 @@
         <form>
           <div class="form-group">
             <label for="barcodeScannerSelect">Scanner Model</label>
-            <select class="custom-select" id="barcodeScannerSelect"></select>
-          </div>
-
-          <div class="form-group">
-            <label for="setupScriptSelect">Setup Script</label>
-            <select class="custom-select" id="setupScriptSelect">
-              <option selected value="0">None</option>
-            </select>
+            <div class="form-row">
+              <select class="custom-select" id="barcodeScannerSelect"></select>
+            </div>
           </div>
 
           <div class="form-group">
             <label for="payloadScriptSelect">Payload Script</label>
-            <select class="custom-select" id="payloadScriptSelect"></select>
+            <div class="form-row">
+              <select class="custom-select" id="payloadScriptSelect"></select>
+            </div>
+          </div>
+
+          <div class="form-group" aria-describedby="setupScriptsHelp">
+            <small><label for="setupScriptsList">Setup Scripts</label></small>
+            <div class="form-row">
+              <ul class="list-group" id="setupScriptsList">
+                <li class="list-group-item"><span>No setup scripts will be run</span></li>
+              </ul>
+
+              <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+            </div>
+
+            <small id="setupScriptsHelp" class="form-text help-text text-muted">
+              These scripts will be run before the payload to set up ADF rules.
+            </small>
+          </div>
+
+          <div class="form-group" aria-describedby="runDelayHelp">
+            <label for="runDelaySelect">Start Delay</label>
+            <div class="form-row">
+              <select class="custom-select" id="runDelaySelect">
+                <option value="0">No Delay</option>
+                <option value="1">1 Second</option>
+                <option value="2">2 Seconds</option>
+                <option selected value="3">3 Seconds</option>
+                <option value="4">4 Seconds</option>
+                <option value="5">5 Seconds</option>
+              </select>
+
+              <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+            </div>
+
+            <small id="runDelayHelp" class="form-text help-text text-muted">
+              How long to wait before displaying the barcodes.<br>
+              Barcodes will be displayed where grey placeholder on the Run page rectangle is.
+            </small>
+          </div>
+
+          <div class="form-group" aria-describedby="displayModeHelp">
+            <label for="displayModeSelect">Display Mode</label>
+            <div class="form-row">
+              <div class="btn-group btn-group-selectable" data-selected-class="btn-dark" data-default-class="btn-secondary"
+              data-value="Auto" role="group" aria-label="Display Mode" id="displayModeSelect">
+                <button type="button" class="btn btn-dark">Auto</button>
+                <button type="button" class="btn btn-secondary">List</button>
+              </div>
+
+              <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+            </div>
+
+            <small id="displayModeHelp" class="form-text help-text text-muted">
+              Auto mode rotates through all barcodes automatically.<br>
+              List mode display all barcodes as a list on screen for printing.
+            </small>
+          </div>
+
+          <div class="form-group" aria-describedby="updateRateHelp" data-dependency="#displayModeSelect=Auto">
+            <label for="updateRateSelect">Update speed</label>
+            <div class="form-row">
+              <select class="custom-select" id="updateRateSelect">
+                <option selected value="0.5">0.5Hz</option>
+                <option value="1.0">1.0Hz</option>
+                <option value="1.5">1.5Hz</option>
+                <option value="2.0">2.0Hz</option>
+                <option value="2.5">2.5Hz</option>
+                <option value="3.0">3.0Hz</option>
+                <option value="3.5">3.5Hz</option>
+                <option value="4.0">4.0Hz</option>
+                <option value="4.5">4.5Hz</option>
+                <option value="5.0">5.0Hz</option>
+              </select>
+
+              <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+            </div>
+
+            <small id="updateRateHelp" class="form-text help-text text-muted">
+              Update rate is how often to chahnge the barcode per second in Auto display mode.<br>
+              Example: 0.5Hz means the barcode will change every 2 seconds.<br>
+              Example: 2.0Hz means the barcode will change twice every second.<br>
+            </small>
           </div>
         </form>
       </div>
@@ -75,32 +152,6 @@
       <div class="controls">
         <button type="button" class="btn btn-success" id="runButton">Start</button>
         <button type="button" class="btn btn-outline-dark" id="stopButton" disabled>Stop</button>
-
-        <form>
-          <div class="form-group">
-            <label for="runDelaySelect">Start Delay</label>
-            <select class="custom-select" id="runDelaySelect">
-              <option value="0">No Delay</option>
-              <option value="1">1 Second</option>
-              <option value="2">2 Seconds</option>
-              <option selected value="3">3 Seconds</option>
-              <option value="4">4 Seconds</option>
-              <option value="5">5 Seconds</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="updateRateSelect">Update speed</label>
-            <select class="custom-select" id="updateRateSelect">
-              <option selected value="0.5">0.5Hz</option>
-              <option value="1">1Hz</option>
-              <option value="2">2Hz</option>
-              <option value="3">3Hz</option>
-              <option value="4">4Hz</option>
-              <option value="5">5Hz</option>
-            </select>
-          </div>
-        </form>
       </div>
 
       <div class="display">
@@ -112,6 +163,9 @@
   <script src="js/lib/jquery-3.2.1.min.js"></script>
   <script src="js/lib/popper.min.js"></script>
   <script src="js/lib/bootstrap.min.js"></script>
+  <script src="js/lib/dependent-controls.js"></script>
+  <script src="js/lib/selectable-btn-grp.js"></script>
+  <script src="js/lib/help-btn.js"></script>
 
   <script src="js/lib/freetype.min.js"></script>
   <script src="js/lib/bwipp.min.js"></script>
