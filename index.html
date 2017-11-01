@@ -96,9 +96,9 @@
             <label for="displayModeSelect">Display Mode</label>
             <div class="form-row">
               <div class="btn-group btn-group-selectable" data-selected-class="btn-dark" data-default-class="btn-secondary"
-              data-value="Auto" role="group" aria-label="Display Mode" id="displayModeSelect">
-                <button type="button" class="btn btn-dark">Auto</button>
-                <button type="button" class="btn btn-secondary">List</button>
+              data-value="List" role="group" aria-label="Display Mode" id="displayModeSelect">
+                <button type="button" class="btn btn-secondary">Auto</button>
+                <button type="button" class="btn btn-dark">List</button>
               </div>
 
               <a href="#" class="btn-help"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
@@ -168,8 +168,9 @@
 
     <section class="run">
       <div class="controls">
-        <button type="button" class="btn btn-success" id="runButton">Start</button>
-        <button type="button" class="btn btn-outline-dark" id="stopButton" disabled>Stop</button>
+        <div class="internal-links">
+          <a class="btn btn-lg btn-outline-danger" href="#config" id="stopButton" disabled>Stop</a>
+        </div>
       </div>
 
       <div class="display">
