@@ -41,8 +41,9 @@ jQuery(($) => {
     barcodeScannerSelect.append(`<option>${model.name}</option>`)
   })
 
-  populateSetupScripts()
-  populatePayloadScripts()
+  populateSetupScripts(() => {
+    populatePayloadScripts()
+  })
 
   /* /////////////////////////////////////////////////// */
   //                   Event handlers                    //
@@ -204,7 +205,7 @@ jQuery(($) => {
   //               Script Manifest Loaders               //
   /* /////////////////////////////////////////////////// */
 
-  function populateSetupScripts () {
+  function populateSetupScripts (cb) {
     const basePath = 'scanner-setup-scripts'
     getScriptsManifest(basePath, (manifest) => {
       manifest.forEach((scriptName) => {
@@ -212,6 +213,13 @@ jQuery(($) => {
           data.scriptName = scriptName
           setupScripts.push(data)
         })
+
+        // All setup scripts have been loaded
+        if (manifest.slice(-1)[0] === scriptName) {
+          if (typeof cb !== 'undefined') {
+            cb()
+          }
+        }
       })
     })
   }
