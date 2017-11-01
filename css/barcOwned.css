@@ -96,6 +96,10 @@ main {
   max-width: 600px;
 }
 
+#barcodeCanvas {
+  background-color: #ccc;
+}
+
 .barcodes-list {
   list-style: none;
 }
