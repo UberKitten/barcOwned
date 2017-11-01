@@ -68,14 +68,23 @@ class BarcOwned {
       })
     }
 
-    // Ensure that if we have ADF options, model has ADF capability
-    if (!model.adf !== !script.setup.adf) {
+    // Backwards Compatiblity
+    if (script.setup.rules && script.setup.adf) {
+      console.warn(`Setup script "${script.name}" includes conflicting 'adf' and 'rules' keys
+        The 'rules' key will take precedence, and the 'adf' key will be ignored`)
+    } else if (script.setup.adf) {
+      script.setup.rules = script.setup.adf
+      delete script.setup.adf
+    }
+
+    // Ensure that if we have ADF rules, model has ADF capability
+    if (!model.adf !== !script.setup.rules) {
       throw new Error(`Setup script is not compatible with model ${model.name}`)
     }
 
-    if (script.setup.adf) {
+    if (script.setup.rules) {
       // Append rule barcodes to return array
-      script.setup.adf.forEach((rule) => {
+      script.setup.rules.forEach((rule) => {
         model.adf.enterconfig.forEach((code) => {
           barcodes.push(model.adf.prefix.concat(code).concat(model.adf.postfix))
         })
