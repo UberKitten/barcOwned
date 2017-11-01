@@ -112,6 +112,8 @@ jQuery(($) => {
     stopButton.removeAttr('disabled')
 
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
+    const displayMode = displayModeSelect.val()
+    const runDelay = displayMode === 'Auto' ? parseInt(runDelaySelect.val()) * 1000 : 0
     const payloadScript = Object.assign({ type: 'payload' }, getPayloadScript({ name: payloadScriptSelect.val() }))
     const setupScripts = []
 
@@ -137,7 +139,7 @@ jQuery(($) => {
       })
     }
 
-    setTimeout(() => displayBarcodes(displayModeSelect.val()), parseInt(runDelaySelect.val()) * 1000)
+    setTimeout(() => displayBarcodes(displayMode), runDelay)
   }
 
   function stop () {
