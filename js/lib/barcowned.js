@@ -197,14 +197,14 @@ function runModelFunction (params, modelfunc, adf) {
   }
 
   if (modelfunc.sendendmessage) {
-
+    // in most scenarios I think there should be no prefix/postfix here,
+    // as endmessage is not specific to a single criteria/action
+    // if needed, these should be specified explicity in endmessage
     barcodes.push(adf.endmessage)
   }
 
   // Append exitconfig barcodes to return array
   modelfunc.exitconfig && modelfunc.exitconfig.forEach((code) => {
-    // in most scenarios I think there should be no prefix/postfix here,
-    // as endmessage is not specific to a single criteria/action
     barcodes.push(code)
   })
 
