@@ -60,6 +60,7 @@ main {
 
 .controls button[type="button"] {
   cursor: pointer;
+  font-size: 0.7rem;
 }
 
 .controls .list-group {
@@ -102,6 +103,7 @@ main {
 
 .barcodes-list {
   list-style: none;
+  padding: 0;
 }
 
 .barcodes-list .barcode {
