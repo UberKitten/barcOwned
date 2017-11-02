@@ -1,9 +1,10 @@
 {
-  "name": "Run command prefixed by `03 using Win+R and UAC bypass with PowerShell",
+  "name": "Run command w/ UAC Bypass",
+  "description": "Run command prefixed by `03 using Win+R with UAC bypass via PowerShell",
 
   "setup": {
     "options": [],
-    "adf": [
+    "rules": [
       {
         "criteria": [
           ["stringatstart", "`03"]

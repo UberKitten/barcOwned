@@ -1,9 +1,10 @@
 {
-  "name": "Map Alt+Y to `04 (to press Yes on UAC)",
+  "name": "Map Alt+Y to `04",
+  "description": "Map Alt+Y to `04 (to press Yes on UAC)",
 
   "setup": {
     "options": [],
-    "adf": [
+    "rules": [
       {
         "criteria": [
           ["stringatstart", "`04"]
