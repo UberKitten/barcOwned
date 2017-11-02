@@ -3,7 +3,7 @@
 
   "setup": {
     "options": [],
-    "adf": [
+    "rules": [
       {
         "criteria": [
           ["stringatstart", "`05"]

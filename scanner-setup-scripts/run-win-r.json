@@ -1,9 +1,10 @@
 {
-  "name": "Run command prefixed by `02 using Win+R",
+  "name": "Run command",
+  "description": "Run command prefixed by `02 using Win+R",
 
   "setup": {
     "options": [],
-    "adf": [
+    "rules": [
       {
         "criteria": [
           ["stringatstart", "`02"]

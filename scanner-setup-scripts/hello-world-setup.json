@@ -1,9 +1,9 @@
 {
-  "name": "Hello World Demo",
+  "name": "Hello World Setup",
 
   "setup": {
     "options": [],
-    "adf": [
+    "rules": [
       {
         "criteria": [
           ["stringatstart", "hello"]

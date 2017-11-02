@@ -1,5 +1,10 @@
 {
   "name": "Hello World Demo",
+  "description": "Say hello, sendtext world",
+
+  "setup-dependencies": [
+    "hello-world-setup"
+  ],
 
   "payload": [
     "hello"
