@@ -15,6 +15,20 @@ class BarcOwned {
     })[0]
   }
 
+  getBWIPPoptionStringFromObject (BWIPPoptionsObj) {
+    let stringOptions = ''
+
+    Object.getOwnPropertyNames(BWIPPoptionsObj).forEach((BWIPPoption) => {
+      if (BWIPPoptionsObj[BWIPPoption] === true) {
+        stringOptions = stringOptions.concat(`${BWIPPoption} `)
+      } else if (BWIPPoptionsObj[BWIPPoption] !== false) {
+        stringOptions = stringOptions.concat(`${BWIPPoption}=${BWIPPoptionsObj[BWIPPoption]} `)
+      }
+    })
+
+    return stringOptions.trim()
+  }
+
   getBarcodeData (script, model) {
     let barcodeData
 
@@ -28,9 +42,13 @@ class BarcOwned {
 
     /* Merge BWIPPoptions for this model with the defaults
      * Options set on the model will override the defaults */
-    barcodeData.BWIPPoptions = Object.assign({},
+    barcodeData.BWIPPoptions = script.bwippoptions ? Object.assign({},
       this.defaultBWIPPoptions,
-      barcodeData.BWIPPoptions
+      model.bwippoptions,
+      script.bwippoptions
+    ) : Object.assign({},
+      this.defaultBWIPPoptions,
+      model.bwippoptions
     )
 
     if (model.optimizeBarcodeData) {
@@ -176,16 +194,14 @@ class BarcOwned {
 
     return {
       barcodes,
-      symbology: model.setup.symbology,
-      BWIPPoptions: model.bwippoptions
+      symbology: script.symbology ? script.symbology : model.setup.symbology || model.symbology
     }
   }
 
   getPayloadBarcodeData (script, model) {
     return {
       barcodes: script.payload,
-      symbology: 'azteccode',
-      BWIPPoptions: model.bwippoptions
+      symbology: script.symbology || model.symbology
     }
   }
 

@@ -17,6 +17,8 @@ jQuery(($) => {
   const runModeSelect = $('#runModeSelect')
   const updateRateSelect = $('#updateRateSelect')
   const setupScriptsList = $('#setupScriptsList')
+  const selectedScriptHasDupesSelect = $('#selectedScriptHasDupes')
+  const quietPeriodDelaySelect = $('#quietPeriodDelaySelect')
 
   const internalLinkContainers = $('.internal-links')
 
@@ -83,8 +85,17 @@ jQuery(($) => {
   }
 
   payloadScriptSelect.on('change', (event) => {
+    populateBarcodes()
+    populateScriptDupesSelect()
     populateSetupScriptList()
   })
+
+  function populateScriptDupesSelect () {
+    const dupesExist = barcodesHaveAdjacentDuplicates(barcodes)
+
+    selectedScriptHasDupesSelect.html('')
+    selectedScriptHasDupesSelect.append(`<option selected>${dupesExist ? 1 : 0}</option>`).trigger('change')
+  }
 
   function populateSetupScriptList () {
     const payloadScript = getPayloadScript({ name: payloadScriptSelect.val() })
@@ -107,17 +118,14 @@ jQuery(($) => {
   //                   Core Functions                    //
   /* /////////////////////////////////////////////////// */
 
-  function run () {
-    stop()
-
-    stopButton.removeAttr('disabled')
-
+  function populateBarcodes () {
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
     const runMode = runModeSelect.val()
-    const displayMode = displayModeSelect.val()
-    const runDelay = displayMode === 'Auto' ? parseInt(runDelaySelect.val()) * 1000 : 0
+
     const payloadScript = Object.assign({ type: 'payload' }, getPayloadScript({ name: payloadScriptSelect.val() }))
     const setupScripts = []
+
+    barcodes = []
 
     payloadScript['setup-dependencies'] && payloadScript['setup-dependencies'].forEach((dependency) => {
       const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
@@ -144,6 +152,16 @@ jQuery(($) => {
         })
       })
     }
+  }
+
+  function run () {
+    const displayMode = displayModeSelect.val()
+    const runDelay = displayMode === 'Auto' ? parseInt(runDelaySelect.val()) * 1000 : 0
+
+    stop()
+    stopButton.removeAttr('disabled')
+
+    populateBarcodes()
 
     displayMode === 'Auto' ? barcodeCanvas.show() : barcodeCanvas.hide()
     setTimeout(() => displayBarcodes(displayMode), runDelay)
@@ -151,15 +169,15 @@ jQuery(($) => {
 
   function stop () {
     stopButton.attr('disabled', true)
+    clearAutoBarcodeDisplay()
+    $('.barcodes-list').remove()
+  }
 
+  function clearAutoBarcodeDisplay () {
     const canvas = barcodeCanvas.get(0)
     const ctx = canvas.getContext('2d')
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    $('.barcodes-list').remove()
-
-    barcodes = []
   }
 
   function displayBarcodes (displayMode) {
@@ -173,23 +191,32 @@ jQuery(($) => {
   }
 
   function displayBarcodesAuto () {
-    let currentBarcode = 0
+    const quietPeriodDelay = quietPeriodDelaySelect.val()
+    let currentBarcodeIdx = 0
 
     function rotateBarcode () {
       if (!barcodes || barcodes.length === 0) {
         return
-      } else if (currentBarcode + 1 > barcodes.length) {
+      } else if (currentBarcodeIdx >= barcodes.length) {
         stop()
         return
       }
 
-      const barcode = barcodes[currentBarcode]
+      const barcode = barcodes[currentBarcodeIdx]
+      const hasNextBarcode = currentBarcodeIdx < barcodes.length - 1
+      const nextBarcode = hasNextBarcode ? barcodes[currentBarcodeIdx + 1] : null
+      const rotationSpeedHz = updateRateSelect.val()
+      const rotationDelay = parseInt(1000 / rotationSpeedHz)
+
+      currentBarcodeIdx++
       drawBarcode(barcode, barcodeCanvas)
 
-      currentBarcode++
-
-      const rotationSpeedHz = updateRateSelect.val()
-      setTimeout(rotateBarcode, parseInt(1000 / rotationSpeedHz))
+      if (hasNextBarcode && nextBarcode.code === barcode.code) {
+        setTimeout(clearAutoBarcodeDisplay, rotationDelay)
+        setTimeout(rotateBarcode, rotationDelay + parseInt(quietPeriodDelay * 1000))
+      } else {
+        setTimeout(rotateBarcode, rotationDelay)
+      }
     }
 
     rotateBarcode()
@@ -210,6 +237,8 @@ jQuery(($) => {
     const canvas = jCanvas.get(0)
     const ctx = canvas.getContext('2d')
     const barcodeWriter = new BWIPJS(Module, true)
+    const stringBWIPPoptions = barcOwned.getBWIPPoptionStringFromObject(barcode.BWIPPoptions)
+
     const visViewportHeight = getVisibleViewportHeight()
     const navbarHeight = $('.navbar').outerHeight()
     const runControlsHeight = $('.run .controls').outerHeight()
@@ -233,7 +262,7 @@ jQuery(($) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     barcodeWriter.bitmap(new Bitmap())
-    BWIPP()(barcodeWriter, barcode.symbology, barcode.code, barcode.BWIPPoptions)
+    BWIPP()(barcodeWriter, barcode.symbology, barcode.code, stringBWIPPoptions)
     barcodeWriter.bitmap().show(canvas, 'N') // "normal"
   }
 
@@ -285,6 +314,8 @@ jQuery(($) => {
 
         if (dependenciesMet) {
           payloadScriptSelect.append(`<option>${script.name}</option>`)
+          populateBarcodes()
+          populateScriptDupesSelect()
           populateSetupScriptList()
         } else {
           console.warn(`Setup dependencies for payload ${script.name} couldn't be loaded, payload will be unavailable to run`)
@@ -362,6 +393,20 @@ jQuery(($) => {
 
       return match
     })[0]
+  }
+
+  function barcodesHaveAdjacentDuplicates (barcodes) {
+    let previousBarcode
+    let dupesExist = false
+
+    barcodes.forEach((barcode) => {
+      if (previousBarcode && previousBarcode.code === barcode.code) {
+        dupesExist = true
+      }
+
+      previousBarcode = barcode
+    })
+    return dupesExist
   }
 
   function getVisibleViewportHeight () {
