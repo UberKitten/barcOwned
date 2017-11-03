@@ -1,6 +1,6 @@
 /* global barcOwned */
 
-if (barcOwned && barcOwned.models) {
+if (typeof barcOwned !== 'undefined' && barcOwned.models) {
   barcOwned.models.push({
     name: 'Symbol DS6707',
     autodelay: 750, // roughly how fast we can send barcodes when autoscanning
@@ -56,7 +56,7 @@ if (barcOwned && barcOwned.models) {
       actions: {
         sendtext: {
           type: 'charmap', // each char in input creates a new barcode
-          prefix: 'B'
+          prefix: '6A1441'
         },
         sendalt: {
           type: 'multiple',
@@ -64,10 +64,10 @@ if (barcOwned && barcOwned.models) {
           process: function (input, adf) {
             // example output: 2=40 A=41 B=42 Z=5A [=5B
             // A-Z, [] and \ are hex ASCII, 2 is special, not sure about others
-            if (input == '2') {
+            if (input === '2') {
               return '40'
             }
-            return input.toString(16).padStart(2, '0')
+            return input.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')
           }
         },
         sendcontrol: {
@@ -122,7 +122,7 @@ if (barcOwned && barcOwned.models) {
           type: 'single',
           prefix: '6A1433',
           process: function (input, adf) {
-            return input.toString(16).padStart(2, '0')
+            return input.toString(16).toUpperCase().padStart(2, '0')
           }
         }
       },

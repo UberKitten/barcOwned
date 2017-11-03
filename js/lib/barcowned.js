@@ -1,5 +1,5 @@
 /* global Logger */
-/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "barcOwned" }] */
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "BarcOwned" }] */
 
 class BarcOwned {
   constructor () {
@@ -272,6 +272,10 @@ class BarcOwned {
     }
 
     if (modelfunc.sendendmessage) {
+      // in most scenarios I think there should be no prefix/postfix here,
+      // as endmessage is not specific to a single criteria/action
+      // if needed, these should be specified explicity in endmessage
+
       Logger.debug([
         `Generated barcode for: ${modelfuncData.name}.sendendmessage`,
         `Code returned: ${adf.endmessage}`
@@ -293,5 +297,3 @@ class BarcOwned {
     return barcodes
   }
 }
-
-const barcOwned = new BarcOwned()
