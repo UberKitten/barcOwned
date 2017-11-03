@@ -56,7 +56,7 @@ if (barcOwned && barcOwned.models) {
       actions: {
         sendtext: {
           type: 'charmap', // each char in input creates a new barcode
-          prefix: 'B'
+          prefix: '6A1441'
         },
         sendalt: {
           type: 'multiple',
