@@ -5,28 +5,48 @@ jQuery(($) => {
 
   dependentControls.each((idx, dependentControl) => {
     const depControl = $(dependentControl)
-    const dependency = depControl.data('dependency')
-    const targetControl = $(dependency.substring(0, dependency.indexOf('=')))
-    const targetValues = dependency.substring(dependency.indexOf('=') + 1).split(',')
+    const dependencies = depControl.data('dependency').split(';')
 
-    targetControl.on('change click', (event) => {
-      const target = $(event.target)
-      updateDependentControl(depControl, target, targetValues)
-    })
-
-    updateDependentControl(depControl, targetControl, targetValues)
+    addEventListeners(depControl, dependencies)
+    updateDependentControlState(depControl, dependencies)
   })
 
-  function updateDependentControl (depControl, target, targetValues) {
-    depControl.hide()
+  function addEventListeners (depControl, dependencies) {
+    dependencies.forEach((dependency) => {
+      const targetControl = $(dependency.substring(0, dependency.indexOf('=')))
 
-    targetValues.forEach((rawTargetValue) => {
-      const targetValue = rawTargetValue.trim()
+      targetControl.on('change click', (event) => {
+        updateDependentControlState(depControl, dependencies)
+      })
+    })
+  }
 
-      if (target.val() === targetValue || target.data('value') === targetValue ||
-        target.parent().val() === targetValue || target.parent().data('value') === targetValue) {
-        depControl.show()
+  function updateDependentControlState (depControl, dependencies) {
+    let shouldDisplayControl = true
+
+    dependencies.forEach((dependency) => {
+      const targetControl = $(dependency.substring(0, dependency.indexOf('=')))
+      const targetValues = dependency.substring(dependency.indexOf('=') + 1).split(',')
+      let depSatified = false
+
+      targetValues.forEach((rawTargetValue) => {
+        const targetValue = rawTargetValue.trim()
+
+        if (targetControl.val() === targetValue || targetControl.data('value') === targetValue ||
+        targetControl.parent().val() === targetValue || targetControl.parent().data('value') === targetValue) {
+          depSatified = true
+        }
+      })
+
+      if (!depSatified) {
+        shouldDisplayControl = false
       }
     })
+
+    if (shouldDisplayControl) {
+      depControl.show()
+    } else {
+      depControl.hide()
+    }
   }
 })

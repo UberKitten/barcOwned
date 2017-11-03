@@ -3,9 +3,11 @@
 if (typeof barcOwned !== 'undefined' && barcOwned.models) {
   barcOwned.models.push({
     name: 'Symbol DS6707',
-    autodelay: 750, // roughly how fast we can send barcodes when autoscanning
+    symbology: 'code128',
+    autoRate: 1.0, // approx. rate in Hz that we can present barcodes
     setup: {
       symbology: 'code128',
+      autoRate: 0.5,
       prefix: '^FNC3',
       postfix: '',
       enterconfig: [],
@@ -21,7 +23,6 @@ if (typeof barcOwned !== 'undefined' && barcOwned.models) {
       }
     },
     adf: {
-      symbology: 'code128',
       prefix: '^FNC3',
       postfix: '',
       enterconfig: ['7B1211'], // begin new rule
