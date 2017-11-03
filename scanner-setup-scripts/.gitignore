@@ -10,5 +10,6 @@
 !map-alt-y.json
 !hello-world-setup.json
 !map-enter.json
+!run-win-r-uac.json
 
 !manifest.example.json
