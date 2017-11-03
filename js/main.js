@@ -1,5 +1,7 @@
 /* global jQuery, BWIPP, BWIPJS, Bitmap, Module */
-/* global barcOwned, addBtnGrpValFunction */
+/* global BarcOwned, addBtnGrpValFunction */
+
+const barcOwned = new BarcOwned()
 
 jQuery(($) => {
   const setupScripts = []

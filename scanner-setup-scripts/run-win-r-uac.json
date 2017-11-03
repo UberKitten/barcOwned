@@ -1,13 +1,13 @@
 {
-  "name": "Run command",
-  "description": "Run command prefixed by `02 using Win+R",
+  "name": "Run command + press Yes on UAC",
+  "description": "Run command prefixed by `06 using Win+R, then press Alt+Y on UAC dialog",
 
   "setup": {
     "options": [],
     "rules": [
       {
         "criteria": [
-          ["stringatstart", "`02"]
+          ["stringatstart", "`06"]
         ],
         "actions": [
           ["pauseduration", 2.0],
@@ -15,7 +15,9 @@
           ["sendpause"],
           ["skipcharacters", 3],
           ["sendremaining"],
-          ["sendenter"]
+          ["sendenter"],
+          ["sendpause"],
+          ["sendalt", "Y"]
         ]
       }
     ]

@@ -9,6 +9,8 @@
           ["stringatstart", "`05"]
         ],
         "actions": [
+          ["skipcharacters", 3],
+          ["sendremaining"],
           ["sendenter"]
         ]
       }
