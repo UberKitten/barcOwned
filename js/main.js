@@ -20,8 +20,6 @@ jQuery(($) => {
 
   const configUI = $('section.setup')
   const runUI = $('section.run')
-
-  const runButton = $('#runButton')
   const stopButton = $('#stopButton')
 
   const barcodeCanvas = $('#barcodeCanvas')
@@ -110,7 +108,6 @@ jQuery(($) => {
   function run () {
     stop()
 
-    runButton.attr('disabled', true)
     stopButton.removeAttr('disabled')
 
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
@@ -152,7 +149,6 @@ jQuery(($) => {
 
   function stop () {
     stopButton.attr('disabled', true)
-    runButton.removeAttr('disabled')
 
     const canvas = barcodeCanvas.get(0)
     const ctx = canvas.getContext('2d')
@@ -212,7 +208,25 @@ jQuery(($) => {
     const canvas = jCanvas.get(0)
     const ctx = canvas.getContext('2d')
     const barcodeWriter = new BWIPJS(Module, true)
-    barcodeWriter.scale($('.display').width() / 156, 2)
+    const visViewportHeight = getVisibleViewportHeight()
+    const navbarHeight = $('.navbar').outerHeight()
+    const runControlsHeight = $('.run .controls').outerHeight()
+    const verticalSafeMargin = 150
+    const displayWidth = $('.display').width()
+    const displayHeight = (visViewportHeight - navbarHeight - runControlsHeight - verticalSafeMargin)
+
+    if (barcode.symbology === 'qrcode') {
+      // QR Code
+      const displaySize = Math.min(displayWidth / 42, displayHeight / 42)
+      barcodeWriter.scale(displaySize, displaySize)
+    } else if (barcode.symbology === 'azteccode') {
+      // Aztec Code
+      const displaySize = Math.min(displayWidth / 38, displayHeight / 38)
+      barcodeWriter.scale(displaySize, displaySize)
+    } else if (barcode.symbology === 'code128') {
+      // Code 128
+      barcodeWriter.scale(displayWidth / 156, 2)
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -346,5 +360,17 @@ jQuery(($) => {
 
       return match
     })[0]
+  }
+
+  function getVisibleViewportHeight () {
+    const $el = $('html')
+    const scrollTop = $(this).scrollTop()
+    const scrollBot = scrollTop + $(this).height()
+    const elTop = $el.offset().top
+    const elBottom = elTop + $el.outerHeight()
+    const visibleTop = elTop < scrollTop ? scrollTop : elTop
+    const visibleBottom = elBottom > scrollBot ? scrollBot : elBottom
+
+    return (visibleBottom - visibleTop)
   }
 })

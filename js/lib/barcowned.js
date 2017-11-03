@@ -1,4 +1,5 @@
-/* eslint no-unused-vars: "barcOwned" */
+/* global Logger */
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "barcOwned" }] */
 
 class BarcOwned {
   constructor () {
@@ -8,13 +9,13 @@ class BarcOwned {
     }
   }
 
-  getModelByName(modelName) {
+  getModelByName (modelName) {
     return this.models.filter((model) => {
       return model.name === modelName
     })[0]
   }
 
-  getBarcodeData(script, model) {
+  getBarcodeData (script, model) {
     let barcodeData
 
     if (script.type === 'setup') {
@@ -35,7 +36,7 @@ class BarcOwned {
     return barcodeData
   }
 
-  getSetupBarcodeData(script, model) {
+  getSetupBarcodeData (script, model) {
     // Ensure that if we have setup options, model has setup capability
     if (!model.setup !== !script.setup.options) {
       throw new Error(`Setup script is not compatible with model ${model.name}`)
@@ -46,6 +47,10 @@ class BarcOwned {
     if (script.setup.options) {
       // Append enterconfig barcodes to return array
       model.setup.enterconfig.forEach((code) => {
+        Logger.debug([
+          `Generated barcode for: model.setup.enterconfig`,
+          `Code returned: ${code}`
+        ])
         barcodes.push(model.setup.prefix.concat(code).concat(model.setup.postfix))
       })
 
@@ -58,12 +63,20 @@ class BarcOwned {
         }
 
         optionCodes.forEach((code) => {
+          Logger.debug([
+            `Generated barcode for: model.setup.options[${option}]`,
+            `Code returned: ${code}`
+          ])
           barcodes.push(model.setup.prefix.concat(code).concat(model.setup.postfix))
         })
       })
 
       // Append exitconfig barcodes to return array
       model.setup.exitconfig.forEach((code) => {
+        Logger.debug([
+          `Generated barcode for: model.setup.exitconfig`,
+          `Code returned: ${code}`
+        ])
         barcodes.push(model.setup.prefix.concat(code).concat(model.setup.postfix))
       })
     }
@@ -86,6 +99,10 @@ class BarcOwned {
       // Append rule barcodes to return array
       script.setup.rules.forEach((rule) => {
         model.adf.enterconfig.forEach((code) => {
+          Logger.debug([
+            `Generated barcode for: model.adf.enterconfig`,
+            `Code returned: ${code}`
+          ])
           barcodes.push(model.adf.prefix.concat(code).concat(model.adf.postfix))
         })
 
@@ -99,7 +116,18 @@ class BarcOwned {
             throw new Error(`Unrecognized criteria name ${criteriaName}`)
           }
 
-          const codes = runModelFunction(criteriaParams, modelCriteriaDef, model.adf)
+          Logger.debug([
+            `Generating rule criteria barcodes for: ${criteriaName}`
+          ])
+
+          const codes = this.runModelFunction(
+            criteriaParams,
+            {
+              type: 'criteria',
+              name: criteriaName,
+              modelFunc: modelCriteriaDef
+            },
+            model.adf)
           codes.forEach((code) => {
             barcodes.push(model.adf.prefix.concat(code).concat(model.adf.postfix))
           })
@@ -115,13 +143,28 @@ class BarcOwned {
             throw new Error(`Unrecognized action name ${actionName}`)
           }
 
-          const codes = runModelFunction(actionParams, modelActionDef, model.adf)
+          Logger.debug([
+            `Generating rule action barcodes for: ${actionName}`
+          ])
+
+          const codes = this.runModelFunction(
+            actionParams,
+            {
+              type: 'action',
+              name: actionName,
+              modelFunc: modelActionDef
+            },
+            model.adf)
           codes.forEach((code) => {
             barcodes.push(model.adf.prefix.concat(code).concat(model.adf.postfix))
           })
         })
 
         model.adf.exitconfig.forEach((code) => {
+          Logger.debug([
+            `Generated barcode for: model.adf.exitconfig`,
+            `Code returned: ${code}`
+          ])
           barcodes.push(model.adf.prefix.concat(code).concat(model.adf.postfix))
         })
       })
@@ -134,79 +177,117 @@ class BarcOwned {
     }
   }
 
-  getPayloadBarcodeData(script, model) {
+  getPayloadBarcodeData (script, model) {
     return {
       barcodes: script.payload,
-      symbology: model.setup.symbology,
+      symbology: 'azteccode',
       BWIPPoptions: model.bwippoptions
     }
+  }
+
+  // implements the function + metadata structure in model'
+  // types: charmap, multiple, single
+  runModelFunction (params, modelfuncData, adf) {
+    const modelfunc = modelfuncData.modelFunc
+    const prefix = modelfunc.prefix || ''
+    const postfix = modelfunc.postfix || ''
+
+    const barcodes = []
+
+    modelfunc.enterconfig && modelfunc.enterconfig.forEach((code) => {
+      Logger.debug([
+        `Generated barcode for: ${modelfuncData.name}.enterconfig`,
+        `Code returned: ${code}`
+      ])
+      barcodes.push(code)
+    })
+
+    if (modelfunc.constructor === String || modelfunc.type === 'static') {
+      // It's just a string, send that
+      Logger.debug([
+        `Generated barcode for: ${modelfuncData.name}`,
+        `Code returned: ${modelfunc}`
+      ])
+      barcodes.push(prefix.concat(modelfunc).concat(postfix))
+    } else if (modelfunc.type === 'single') {
+      // The function does everything and returns values
+      const codes = modelfunc.process(params[0], adf)
+
+      if (Array.isArray(codes)) {
+        codes.forEach((code) => {
+          Logger.debug([
+            `Generated barcode for: ${modelfuncData.name}`,
+            `Code returned: ${code}`
+          ])
+          barcodes.push(prefix.concat(code).concat(postfix))
+        })
+      } else {
+        Logger.debug([
+          `Generated barcode for: ${modelfuncData.name}`,
+          `Code returned: ${codes}`
+        ])
+        barcodes.push(prefix.concat(codes).concat(postfix))
+      }
+    } else if (modelfunc.type === 'charmap') {
+      params.forEach((param) => {
+        Logger.debug([
+          `Generating barcodes for: ${modelfuncData.name}`
+        ])
+        const codes = this.runModelFunction(
+          [param],
+          {
+            type: 'charmap',
+            name: 'mapcharacter',
+            modelFunc: adf.mapcharacter
+          },
+          adf)
+
+        if (Array.isArray(codes)) {
+          codes.forEach((code) => {
+            barcodes.push(prefix.concat(code).concat(postfix))
+          })
+        } else {
+          barcodes.push(prefix.concat(codes).concat(postfix))
+        }
+      })
+    } else if (modelfunc.type === 'multiple') {
+      // we have to run for each character
+      params.forEach((param) => {
+        param.split('').forEach((char) => {
+          const code = modelfunc.process(char, adf)
+
+          Logger.debug([
+            `Generated barcode for: ${modelfuncData.name}`,
+            `Code returned: ${code}`
+          ])
+          barcodes.push(prefix.concat(code).concat(postfix))
+        })
+      })
+    } else {
+      throw new Error(`Unrecognized model function type ${modelfunc.type}`)
+    }
+
+    if (modelfunc.sendendmessage) {
+      Logger.debug([
+        `Generated barcode for: ${modelfuncData.name}.sendendmessage`,
+        `Code returned: ${adf.endmessage}`
+      ])
+      barcodes.push(adf.endmessage)
+    }
+
+    // Append exitconfig barcodes to return array
+    modelfunc.exitconfig && modelfunc.exitconfig.forEach((code) => {
+      // in most scenarios I think there should be no prefix/postfix here,
+      // as endmessage is not specific to a single criteria/action
+      Logger.debug([
+        `Generated barcode for: ${modelfuncData.name}.exitconfig`,
+        `Code returned: ${code}`
+      ])
+      barcodes.push(code)
+    })
+
+    return barcodes
   }
 }
 
 const barcOwned = new BarcOwned()
-
-
-// implements the function + metadata structure in model'
-// types: charmap, multiple, single
-function runModelFunction (params, modelfunc, adf) {
-  const prefix = modelfunc.prefix || ''
-  const postfix = modelfunc.postfix || ''
-
-  const barcodes = []
-
-  if (modelfunc.enterconfig) {
-    barcodes.push(modelfunc.enterconfig)
-  }
-
-  if (modelfunc.constructor === String || modelfunc.type === 'static') {
-    // It's just a string, send that
-    barcodes.push(prefix.concat(modelfunc).concat(postfix))
-  } else if (modelfunc.type === 'single') {
-    // The function does everything and returns values
-    const codes = modelfunc.process(params[0], adf)
-
-    if (Array.isArray(codes)) {
-      codes.forEach((code) => {
-        barcodes.push(prefix.concat(code).concat(postfix))
-      })
-    } else {
-      barcodes.push(prefix.concat(codes).concat(postfix))
-    }
-  } else if (modelfunc.type === 'charmap') {
-    params.forEach((param) => {
-      const codes = runModelFunction([param], adf.mapcharacter, adf)
-
-      if (Array.isArray(codes)) {
-        codes.forEach((code) => {
-          barcodes.push(prefix.concat(code).concat(postfix))
-        })
-      } else {
-        barcodes.push(prefix.concat(codes).concat(postfix))
-      }
-    })
-  } else if (modelfunc.type === 'multiple') {
-    // we have to run for each character
-    params.forEach((param) => {
-      param.split('').forEach((char) => {
-        const code = modelfunc.process(char, adf)
-        barcodes.push(prefix.concat(code).concat(postfix))
-      })
-    })
-  } else {
-    throw new Error(`Unrecognized model function type ${modelfunc.type}`)
-  }
-
-  if (modelfunc.sendendmessage) {
-
-    barcodes.push(adf.endmessage)
-  }
-
-  // Append exitconfig barcodes to return array
-  modelfunc.exitconfig && modelfunc.exitconfig.forEach((code) => {
-    // in most scenarios I think there should be no prefix/postfix here,
-    // as endmessage is not specific to a single criteria/action
-    barcodes.push(code)
-  })
-
-  return barcodes
-}
