@@ -34,9 +34,10 @@ Open source under the [MIT License](license.md).
 
 The project also includes the following other open source software:
 
-|                       Project                     |    License   |
-|                          -                        |       -      |
-|   [BWIPJS](https://github.com/metafloor/bwip-js)  |      MIT     |
-|     [jQuery](https://github.com/jquery/jquery)    |      MIT     |
-|   [Bootstrap](https://github.com/twbs/bootstrap)  |      MIT     |
-|  [GitBook](https://github.com/GitbookIO/gitbook)  |  Apache 2.0  |
+|                           Project                        |    License   |
+|                               -                          |       -      |
+|      [BWIPJS](https://github.com/metafloor/bwip-js)      |      MIT     |
+|         [jQuery](https://github.com/jquery/jquery)       |      MIT     |
+|       [Bootstrap](https://github.com/twbs/bootstrap)     |      MIT     |
+|   [logger.js](https://github.com/jonnyreeves/js-logger)  |      MIT     |
+|      [GitBook](https://github.com/GitbookIO/gitbook)     |  Apache 2.0  |

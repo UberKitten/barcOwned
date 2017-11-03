@@ -1,4 +1,7 @@
 /* General */
+html {
+  height: 100%;
+}
 
 main {
   padding-top: 2rem;
