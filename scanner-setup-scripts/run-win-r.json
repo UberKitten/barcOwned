@@ -10,12 +10,12 @@
           ["stringatstart", "`02"]
         ],
         "actions": [
-          ["pauseduration", 1.0],
+          ["pauseduration", 2.0],
           ["sendgui", "R"],
+          ["sendpause"],
           ["skipcharacters", 3],
           ["sendremaining"],
-          ["sendenter"],
-          ["sendpause"]
+          ["sendenter"]
         ]
       }
     ]
