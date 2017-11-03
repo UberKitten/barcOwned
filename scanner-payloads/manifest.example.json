@@ -1,5 +1,6 @@
 [
   "run-calc.json",
   "hello-world-demo.json",
-  "invoke-mimikatz.json"
+  "invoke-mimikatz.json",
+  "run-exe.json"
 ]
