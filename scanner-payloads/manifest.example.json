@@ -2,5 +2,6 @@
   "run-calc.json",
   "hello-world-demo.json",
   "invoke-mimikatz.json",
-  "run-exe.json"
+  "run-exe.json",
+  "cereal-box-demo.json"
 ]
