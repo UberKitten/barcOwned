@@ -6,5 +6,6 @@
 
 !run-calc.json
 !hello-world-demo.json
+!invoke-mimikatz.json
 
 !manifest.example.json
