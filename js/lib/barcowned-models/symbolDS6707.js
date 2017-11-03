@@ -67,7 +67,7 @@ if (barcOwned && barcOwned.models) {
             if (input == '2') {
               return '40'
             }
-            return input.toString(16).padStart(2, '0')
+            return input.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')
           }
         },
         sendcontrol: {
@@ -122,7 +122,7 @@ if (barcOwned && barcOwned.models) {
           type: 'single',
           prefix: '6A1433',
           process: function (input, adf) {
-            return input.toString(16).padStart(2, '0')
+            return input.toString(16).toUpperCase().padStart(2, '0')
           }
         }
       },
