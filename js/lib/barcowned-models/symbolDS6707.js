@@ -136,6 +136,11 @@ if (barcOwned && barcOwned.models) {
       }
     },
 
+    optimizeBarcodeData: (unoptimizedBarcodeData) => {
+      // Optimization not yet implemented for this model
+      return unoptimizedBarcodeData
+    },
+
     bwippoptions: {
       parsefnc: true
     }

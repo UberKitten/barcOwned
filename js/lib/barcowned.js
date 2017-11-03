@@ -33,6 +33,10 @@ class BarcOwned {
       barcodeData.BWIPPoptions
     )
 
+    if (model.optimizeBarcodeData) {
+      barcodeData = model.optimizeBarcodeData(barcodeData)
+    }
+
     return barcodeData
   }
 
