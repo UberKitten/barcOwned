@@ -1,8 +1,8 @@
 [
-  "run-calc.json",
+  "optimize-ds6707.json",
+  "cereal-box-demo.json",
   "hello-world-demo.json",
   "invoke-mimikatz.json",
-  "run-exe.json",
-  "cereal-box-demo.json",
-  "optimize-ds6707.json"
+  "run-calc.json",
+  "run-exe.json"
 ]
