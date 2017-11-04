@@ -4,5 +4,6 @@
   "hello-world-demo.json",
   "invoke-mimikatz.json",
   "run-calc.json",
-  "run-exe.json"
+  "run-exe.json",
+  "run-cmd.json"
 ]

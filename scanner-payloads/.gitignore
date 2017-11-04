@@ -10,5 +10,6 @@
 !run-exe.json
 !cereal-box-demo.json
 !optimize-ds6707.json
+!run-cmd.json
 
 !manifest.example.json
