@@ -19,7 +19,10 @@ if (typeof barcOwned !== 'undefined' && barcOwned.models) {
           'N02CC03', // Mobile Phone Decode Enable
           'N02D60D' // Mobile Phone Decode High Aggressive
         ],
-        eraseallrules: ['80'] // Erase all rules
+        eraseallrules: ['80'], // Erase all rules
+        restoredefaults: ['91'], // Restore custom defaults
+        setfactorydefaults: ['92'], // Sets factory defaults, deletes custom defaults
+        indirectillumination: ['N023B03'] // Better for "shiny" surfaces
       }
     },
     adf: {
