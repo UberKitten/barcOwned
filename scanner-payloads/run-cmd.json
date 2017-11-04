@@ -1,0 +1,12 @@
+{
+  "name": "Run cmd.exe",
+  "description": "Open the Windows Run dialog and run cmd",
+
+  "setup-dependencies": [
+    "run-win-r"
+  ],
+
+  "payload": [
+    "`02cmd.exe"
+  ]
+}
