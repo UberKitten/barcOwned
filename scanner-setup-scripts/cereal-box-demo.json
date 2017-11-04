@@ -10,6 +10,7 @@
           ["stringatstart", "0"]
         ],
         "actions": [
+          ["pauseduration", 4.0],
           ["sendgui", "X"],
           ["sendtext", "A"],
           ["sendpause"],
