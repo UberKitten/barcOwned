@@ -1,0 +1,15 @@
+{
+  "name": "Optimize DS6707",
+  "description": "Wipes and optimizes Symbol DS6707",
+
+  "setup": {
+    "options": [
+      "restoredefaults",
+      "setfactorydefaults",
+      "mobilephonedecode",
+      "scanpresentation",
+      "indirectillumination"
+    ],
+    "rules": []
+  }
+}

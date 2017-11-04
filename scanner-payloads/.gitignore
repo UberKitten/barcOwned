@@ -9,5 +9,6 @@
 !invoke-mimikatz.json
 !run-exe.json
 !cereal-box-demo.json
+!optimize-ds6707.json
 
 !manifest.example.json
