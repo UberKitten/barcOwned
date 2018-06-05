@@ -1,4 +1,5 @@
 aiohttp==2.3.10
+aiohttp-index==0.1
 async-timeout==2.0.1
 cchardet==2.1.1
 chardet==3.0.4

@@ -1,0 +1,27 @@
+{
+  "name": "Run calc.exe",
+  "description": "Open the Windows Run dialog and open Calculator",
+
+  "setup": {
+    "options": [],
+    "rules": [
+      {
+        "criteria": [
+          ["stringatstart", "`02"]
+        ],
+        "actions": [
+          ["pauseduration", 2.0],
+          ["sendgui", "R"],
+          ["sendpause"],
+          ["skipcharacters", 3],
+          ["sendremaining"],
+          ["sendenter"]
+        ]
+      }
+    ]
+  },
+
+  "payload": [
+    "`02calc.exe"
+  ]
+}
