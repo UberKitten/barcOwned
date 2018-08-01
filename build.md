@@ -18,7 +18,7 @@ Should output Python 3.
 
 ## Run server
 If you haven't yet, enter the virtual environment:
-- `virtualenv -p python3 env`
+- `source env/bin/activate`
 
 Then start the server:
 - `python main.py`
