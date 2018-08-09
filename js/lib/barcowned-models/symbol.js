@@ -117,7 +117,7 @@ if (typeof barcOwned !== 'undefined' && barcOwned.models) {
         },
         sendpausealt: {
           type: 'single',
-          enterconfig: ['6A14E5'],
+          prefix: '6A14E5',
           process: function (input, adf) {
             return input.toString(16).toUpperCase().padStart(2, '0')
           }
@@ -134,6 +134,21 @@ if (typeof barcOwned !== 'undefined' && barcOwned.models) {
           prefix: '6A1433',
           process: function (input, adf) {
             return input.toString(16).toUpperCase().padStart(2, '0')
+          }
+        },
+        sendarrowkey: {
+          type: 'single',
+          prefix: '6A1447',
+          process: function (input, adf) {
+            if (input === 'up') {
+              return '0F'
+            } else if (input === 'down') {
+              return '10'
+            } else if (input === 'left') {
+              return '11'
+            } else if (input === 'right') {
+              return '12'
+            }
           }
         }
       },
