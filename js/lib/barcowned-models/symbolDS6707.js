@@ -115,6 +115,13 @@ if (typeof barcOwned !== 'undefined' && barcOwned.models) {
             ]
           }
         },
+        sendpausealt: {
+          type: 'single',
+          enterconfig: ['6A14E5'],
+          process: function (input, adf) {
+            return input.toString(16).toUpperCase().padStart(2, '0')
+          }
+        },
         sendgui: {
           type: 'charmap',
           prefix: '6A1443'
