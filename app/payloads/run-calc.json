@@ -7,13 +7,12 @@
     "rules": [
       {
         "criteria": [
-          ["stringatstart", "`02"]
+          ["stringatstart", "!"]
         ],
         "actions": [
-          ["pauseduration", 2.0],
           ["sendgui", "R"],
-          ["sendpause"],
-          ["skipcharacters", 3],
+          ["sendpausealt", 20],
+          ["skipcharacters", 1],
           ["sendremaining"],
           ["sendenter"]
         ]
@@ -22,6 +21,6 @@
   },
 
   "payload": [
-    "`02calc.exe"
+    "!calc.exe"
   ]
 }
