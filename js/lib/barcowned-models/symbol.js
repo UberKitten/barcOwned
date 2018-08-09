@@ -2,7 +2,7 @@
 
 if (typeof barcOwned !== 'undefined' && barcOwned.models) {
   barcOwned.models.push({
-    name: 'Symbol DS6707',
+    name: 'Motorola/Zebra Symbol',
     symbology: 'code128',
     autoRate: 1.0, // approx. rate in Hz that we can present barcodes
     setup: {
