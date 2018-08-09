@@ -10,9 +10,8 @@
           ["stringatstart", "`02"]
         ],
         "actions": [
-          ["pauseduration", 2.0],
           ["sendgui", "R"],
-          ["sendpause"],
+          ["sendpausealt", 20],
           ["skipcharacters", 3],
           ["sendremaining"],
           ["sendenter"]

