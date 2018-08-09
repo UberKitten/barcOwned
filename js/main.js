@@ -307,19 +307,21 @@ jQuery(($) => {
         }
         
         // Switch to ASCII mode if we encoded any C40 characters
-        if (charCodewords.length - unlatchChars > 0 && unlatchChars > 0) {
+        if (charCodewords.length - unlatchChars > 0) {
           encodedBarcode += "^254"
         }
         
         for (i = segment.length - unlatchChars; i < segment.length; i++) {
           // Currently with the raw option, everything has to be encoded with ^###
-		  // Raw value is ASCII + 1
+          // Raw value is ASCII + 1
           encodedBarcode += "^" + (segment.charCodeAt(i) + 1).toString().padStart(3, "0")
         }
       }
     }
     
-    return encodedBarcode
+    // The ^129 here specifies end of message
+    // Which tells the barcode reader to ignore any remaining padding symbols
+    return encodedBarcode + "^129"
   }
     
   /* /////////////////////////////////////////////////// */
@@ -376,7 +378,7 @@ jQuery(($) => {
       Logger.debug(["Raw aggregate barcode:", aggregateBarcode])
       return [{
         code: encodeC40(aggregateBarcode),
-        //code: encodeC40("^234N6S2681000Untitled1       N57B12116C1F9010568656C6C6F6A1106A1441776A14416F6A1441726A14416C6A1441644"),
+        //code: encodeC40("^234N6S2681000barcOwned       N57B12116C201B60B30B32B+6A1443526A14E5146A1433036A1106A1186A14470D4"),
         symbology: "datamatrix",
         BWIPPoptions: {
 			raw : true
