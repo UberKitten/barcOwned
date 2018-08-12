@@ -32,16 +32,27 @@ class Editor extends Component {
     const selectedFile = localStorage.getItem('editor-file-selected')
     const localFileData = JSON.parse(localStorage.getItem('editor-file-data'))
 
-    this.getFiles()
-      .then((remoteFileData) => {
-        const fileData = Object.assign({}, remoteFileData, localFileData)
-        this.setState({ selectedFile, fileData })
-        localStorage.setItem('editor-file-data', JSON.stringify(fileData))
+    this.getRunMode()
+      .then((response) => {
+        const runMode = response.data
+        this.setState({ runMode })
+
+        this.getFiles()
+          .then((remoteFileData) => {
+            const fileData = runMode === 'private' ? Object.assign({}, localFileData, remoteFileData)
+              : Object.assign({}, remoteFileData, localFileData)
+            this.setState({ selectedFile, fileData })
+            localStorage.setItem('editor-file-data', JSON.stringify(fileData))
+          })
+          .catch((error) => {
+            console.error(error)
+            alert('Fatal error: no connection to server')
+          })
       })
-      .catch((error) => {
-        console.error(error)
-        alert('Fatal error: no connection to server')
-      })
+  }
+
+  getRunMode () {
+    return axios.get('/runmode')
   }
 
   getFiles () {
