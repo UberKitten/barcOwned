@@ -8,7 +8,7 @@ import 'brace/theme/monokai'
 import './Editor.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowAltCircleDown, faPlayCircle } from '@fortawesome/free-regular-svg-icons'
-import { faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faUpload, faPlusSquare } from '@fortawesome/free-solid-svg-icons'
 
 class Editor extends Component {
   constructor (props) {
@@ -26,6 +26,7 @@ class Editor extends Component {
     this.onFileSelected = this.onFileSelected.bind(this)
     this.onFileUploaded = this.onFileUploaded.bind(this)
     this.importFile = this.importFile.bind(this)
+    this.getUniqueFilename = this.getUniqueFilename.bind(this)
   }
 
   componentDidMount () {
@@ -41,7 +42,7 @@ class Editor extends Component {
           .then((remoteFileData) => {
             const fileData = runMode === 'private' ? Object.assign({}, localFileData, remoteFileData)
               : Object.assign({}, remoteFileData, localFileData)
-            this.setState({ selectedFile, fileData })
+            this.setState({ selectedFile: selectedFile || 'hello-world.json', fileData })
             localStorage.setItem('editor-file-data', JSON.stringify(fileData))
           })
           .catch((error) => {
@@ -49,6 +50,17 @@ class Editor extends Component {
             alert('Fatal error: no connection to server')
           })
       })
+
+    // Prevent impulsive save key mashing from open page save dialog
+    window.addEventListener('keydown', (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (String.fromCharCode(event.which).toLowerCase()) {
+          case 's':
+            event.preventDefault()
+            break
+        }
+      }
+    })
   }
 
   getRunMode () {
@@ -116,26 +128,34 @@ class Editor extends Component {
 
     return new Promise((resolve, reject) => {
       fileReader.addEventListener('loadend', () => {
-        const fileData = Object.assign({}, this.state.fileData)
-        let fileNameIteration = 1
-        let fileName = file.name
-
-        if (fileData[file.name]) {
-          fileName = file.name.substring(0, file.name.length - 5)
-
-          while (fileData[`${fileName}-${fileNameIteration}.json`]) {
-            fileNameIteration++
-          }
-
-          fileName = `${fileName}-${fileNameIteration}.json`
-        }
-
-        this.saveFileData(fileName, fileReader.result)
+        this.saveFileData(this.getUniqueFilename(file.name), fileReader.result)
         resolve()
       })
 
       fileReader.readAsText(file)
     })
+  }
+
+  getUniqueFilename (fileName = 'untitled-payload.json') {
+    const fileData = Object.assign({}, this.state.fileData)
+    let fileNameIteration = 1
+
+    if (fileName in fileData) {
+      fileName = fileName.substring(0, fileName.lastIndexOf('.'))
+
+      while (`${fileName}-${fileNameIteration}.json` in fileData) {
+        fileNameIteration++
+      }
+
+      fileName = `${fileName}-${fileNameIteration}.json`
+    }
+
+    return fileName
+  }
+
+  onClickNewFileAction (event) {
+    event.preventDefault()
+    this.saveFileData(this.getUniqueFilename(), '')
   }
 
   onEditorChange (newCode) {
@@ -146,6 +166,31 @@ class Editor extends Component {
     event.preventDefault()
     this.setState({ selectedFile: file })
     this.saveSelectedFile(file)
+  }
+
+  onChangeFilename (event) {
+    if (!this.state.selectedFile || event.target.value.trim() === '') {
+      return
+    }
+
+    const fileData = Object.assign({}, this.state.fileData)
+    const fileContent = fileData[this.state.selectedFile].substring(0)
+    delete fileData[this.state.selectedFile]
+    fileData[event.target.value] = fileContent
+    this.saveFileData(event.target.value, fileContent)
+    this.setState({ fileData, selectedFile: event.target.value })
+
+    if (this.state.runMode === 'public') {
+      return
+    }
+
+    axios.patch(`/rename-payload/${this.state.selectedFile}`, event.target.value)
+      .then(() => {
+        // Rename succeeded
+      })
+      .catch((error) => {
+        console.error(error)
+      })
   }
 
   onClickRunAction (event) {
@@ -178,6 +223,10 @@ class Editor extends Component {
 
     return (
       <div className='App ace-monokai'>
+        <section className='filename'>
+          <input type='text' onChange={(event) => this.onChangeFilename(event) } value={this.state.selectedFile} />
+        </section>
+
         <section className='editor'>
           <aside className='file-browser sidebar'>
             <ul className='padded-list striped-list'>
@@ -194,7 +243,8 @@ class Editor extends Component {
             height='100%'
             width='75vw'
             value={fileContent}
-            editorProps={{$blockScrolling: true}}
+            editorProps={{$blockScrolling: Infinity}}
+            setOptions={{tabSize: 2}}
           />
         </section>
 
@@ -206,10 +256,12 @@ class Editor extends Component {
                   ref={this.fileInput} onChange={(event) => this.onFileUploaded(event.target.files)} />
                 <a href='' onClick={(event) => this.onClickImportAction(event)}><FontAwesomeIcon icon={faUpload} />Import JSON</a>
               </li>
+
+              <li>
+                <a href='' onClick={(event) => this.onClickNewFileAction(event)}><FontAwesomeIcon icon={faPlusSquare} />New File</a>
+              </li>
             </ul>
           </aside>
-
-          <div className='separator' />
 
           <main>
             <ul className='padded-list'>

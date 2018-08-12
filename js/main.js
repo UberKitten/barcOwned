@@ -464,7 +464,7 @@ jQuery(($) => {
       barcodeWriter.scale(displayWidth / 156, 2)
     } else if (barcode.symbology === 'datamatrix') {
       // DataMatrix
-      barcodeWriter.scale(displayWidth / 128, displayWidth / 128)
+      barcodeWriter.scale(2, 2)
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)

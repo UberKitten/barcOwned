@@ -9,6 +9,22 @@
   display: flex;
 }
 
+.filename {
+  background-color: #222;
+  padding-left: 25vw;
+  padding-bottom: 10px;
+}
+
+.filename input {
+  width: 100%;
+  margin-left: 10px;
+  padding: 10px;
+  font-size: 14px;
+  background-color: #272822;
+  border: none;
+  color: #fff;
+}
+
 .file-browser li a {
   color: rgb(13, 255, 37);
   text-decoration: none;
@@ -16,6 +32,7 @@
 
 .sidebar {
   width: 25vw;
+  overflow: scroll;
 }
 
 .actions-bar {
@@ -23,28 +40,16 @@
   background-color: #222;
 }
 
-.actions-bar .separator {
-  background-color: #2F3129;
-  width: 41px;
-}
-
 .actions-bar main {
-  width: calc(75vw - 41px);
+  padding-left: 50px;
+  width: 75vw;
 }
 
 .actions-bar ul {
   display: flex;
 }
 
-a .svg-inline--fa {
-  margin-right: 0.5rem;
-}
-
 .actions-bar li a {
   color: rgb(13, 255, 37);
   text-decoration: none;
-}
-
-.actions-bar main li a {
-  /* */
 }

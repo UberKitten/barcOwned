@@ -17,7 +17,7 @@ const App = () => (
         </li>
 
         <li>
-          <a href='/docs/index.html'>Docs</a>
+          <a href='https://github.com/T3hUb3rK1tten/barcowned/wiki' target='_blank'>Docs</a>
         </li>
       </ul>
 

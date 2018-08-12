@@ -4,6 +4,7 @@ runMode = "public"
 
 from os import listdir, path
 import json
+import os
 from aiohttp import web
 from aiohttp_index import IndexMiddleware
 
@@ -13,6 +14,14 @@ PAYLOADS_ROOT = path.join(PROJECT_ROOT, 'payloads')
 async def handle_manifest(request):
 	onlyfiles = [f for f in listdir(PAYLOADS_ROOT) if path.isfile(path.join(PAYLOADS_ROOT, f))]
 	return web.Response(text=json.dumps(onlyfiles))
+
+async def handle_rename(request):
+  if runMode != "private":
+    return web.Response(status=405) # method not allowed
+
+  newPayloadName = await request.text()
+  os.rename(path.join(PAYLOADS_ROOT, request.match_info['payload']), path.join(PAYLOADS_ROOT, newPayloadName))
+  return web.Response(status=200)
 
 async def handle_runmode(request):
 	return web.Response(text=runMode)
@@ -35,6 +44,10 @@ app.router.add_route('GET',
 app.router.add_route('PUT',
 					path='/payloads/{payload}',
 					handler=handle_payload_put)
+
+app.router.add_route('PATCH',
+          path='/rename-payload/{payload}',
+          handler=handle_rename)
 
 app.router.add_route('GET',
 					path='/runmode',
