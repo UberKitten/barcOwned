@@ -2,7 +2,7 @@
 # to enable file saving functionality
 runMode = "public"
 
-from os import listdir, path
+from os import listdir, path, getenv
 import json
 from aiohttp import web
 from aiohttp_index import IndexMiddleware
@@ -55,4 +55,4 @@ app.router.add_static('/',
 					name='root',
 					show_index=True)
 
-web.run_app(app)
+web.run_app(app, port = int(getenv('PORT', 8080)))
