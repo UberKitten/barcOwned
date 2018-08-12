@@ -1,0 +1,49 @@
+{
+  "name": "Tetris",
+  "description": "Play Tetris slowly and awkwardly!",
+
+  "setup": {
+    "options": [],
+    "rules": [
+      {
+        "criteria": [
+          ["stringatstart", "up"]
+        ],
+        "actions": [
+          ["sendarrowkey", "up"]
+        ]
+      },
+      {
+        "criteria": [
+          ["stringatstart", "down"]
+        ],
+        "actions": [
+          ["sendarrowkey", "down"]
+        ]
+      },
+      {
+        "criteria": [
+          ["stringatstart", "left"]
+        ],
+        "actions": [
+          ["sendarrowkey", "left"]
+        ]
+      },
+      {
+        "criteria": [
+          ["stringatstart", "right"]
+        ],
+        "actions": [
+          ["sendarrowkey", "right"]
+        ]
+      }
+    ]
+  },
+
+  "payload": [
+    "up",
+    "down",
+    "left",
+    "right"
+  ]
+}
