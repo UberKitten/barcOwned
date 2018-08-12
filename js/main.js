@@ -326,12 +326,13 @@ jQuery(($) => {
       aggregateBarcode = "^234" + // Reader programming
         "N6" + // Begin 2D barcode
         "S2681000" + // Config title follows?
-        "barcOwned       " + // Configuration title
-        "N5" // Begin programming codes
+        "barcOwned       " // Configuration title
 
       setupBarcodes.forEach((barcode) => {
         // FNC3 isn't needed in aggregate
         aggregateBarcode += barcode.code.replace("^FNC3", "")
+        // N5 is prefixed on begin rules
+          .replace("7B1211", "N57B1211")
       })
       Logger.debug(["Raw aggregate barcode:", aggregateBarcode])
       return [{
@@ -339,8 +340,8 @@ jQuery(($) => {
         //code: encodeC40("^234N6S2681000barcOwned       N57B12116C201B60B30B32B+6A1443526A14E5146A1433036A1106A1186A14470D4"),
         symbology: 'datamatrix',
         BWIPPoptions: {
-			raw : true
-		}
+          raw : true
+        }
       }]
     }
 

