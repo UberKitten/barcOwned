@@ -50,11 +50,6 @@ app.router.add_static('/editor',
 					name='app_editor',
 					show_index=True)
 
-app.router.add_static('/run',
-					path=path.join(PROJECT_ROOT, 'app/build'),
-					name='app_run',
-					show_index=True)
-
 app.router.add_static('/',
 					path=PROJECT_ROOT,
 					name='root',

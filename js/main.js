@@ -1,22 +1,17 @@
-/* global jQuery, BWIPP, BWIPJS, Bitmap, Module */
+/* global jQuery, BWIPP, BWIPJS, Bitmap, Module, Logger */
 /* global BarcOwned, addBtnGrpValFunction */
 
 const barcOwned = new BarcOwned()
 
 jQuery(($) => {
-  const setupScripts = []
-  const payloadScripts = []
-
   let barcodes = []
 
   // UI references
   const barcodeScannerSelect = $('#barcodeScannerSelect')
-  const payloadScriptSelect = $('#payloadScriptSelect')
   const runDelaySelect = $('#runDelaySelect')
   const displayModeSelect = $('#displayModeSelect')
   const runModeSelect = $('#runModeSelect')
   const updateRateSelect = $('#updateRateSelect')
-  const setupScriptsList = $('#setupScriptsList')
   const selectedScriptHasDupesSelect = $('#selectedScriptHasDupes')
   const quietPeriodDelaySelect = $('#quietPeriodDelaySelect')
 
@@ -42,10 +37,6 @@ jQuery(($) => {
   // Populate scanner models
   barcOwned.models.forEach((model) => {
     barcodeScannerSelect.append(`<option>${model.name}</option>`)
-  })
-
-  populateSetupScripts(() => {
-    populatePayloadScripts()
   })
 
   /* /////////////////////////////////////////////////// */
@@ -84,12 +75,6 @@ jQuery(($) => {
     })
   }
 
-  payloadScriptSelect.on('change', (event) => {
-    populateBarcodes()
-    populateScriptDupesSelect()
-    populateSetupScriptList()
-  })
-
   function populateScriptDupesSelect () {
     const dupesExist = barcodesHaveAdjacentDuplicates(barcodes)
 
@@ -97,35 +82,18 @@ jQuery(($) => {
     selectedScriptHasDupesSelect.append(`<option selected>${dupesExist ? 1 : 0}</option>`).trigger('change')
   }
 
-  function populateSetupScriptList () {
-    const payloadScript = getPayloadScript({ name: payloadScriptSelect.val() })
-
-    setupScriptsList.html('')
-
-    if (payloadScript['setup-dependencies']) {
-      payloadScript['setup-dependencies'].forEach((dependency) => {
-        const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
-        const setupScript = getSetupScript({ scriptName: dependencyName })
-
-        setupScriptsList.append(`<li class="list-group-item"><span>${setupScript.name}</span></li>`)
-      })
-    } else {
-      setupScriptsList.append(`<li class="list-group-item"><span>No setup scripts will be run</span></li>`)
-    }
-  }
-
   /* /////////////////////////////////////////////////// */
   //                  Barcode Encoders                   //
   /* /////////////////////////////////////////////////// */
-  
+
   // Takes a single barcode and converts it into the ^123^123 raw C40 encoding
-  function encodeC40(barcode) {      
-  
+  function encodeC40(barcode) {
+
     // C40 switches between 4 sets depending on the character
     // This returns the codewords for the supplied character
     function getCodewords(character) {
       ascii = character.charCodeAt(0)
-      
+
       codewords = []
       function addCodeword(set, value) {
         // 0 is the default set
@@ -141,7 +109,7 @@ jQuery(($) => {
           value: value
         })
       }
-      
+
       // C40 can encode the extended ASCII set >= 128
       // To do that, we have to send "upper shift / hibit" (set 2, value 30)
       // Then we encode the character value - 128 and send that
@@ -151,7 +119,7 @@ jQuery(($) => {
         addCodeword(2, 30)
         ascii = ascii - 128
       }
-      
+
       if (ascii == 32) {
         // ASCII space = 32
         // Set 0 space = 3
@@ -187,22 +155,22 @@ jQuery(($) => {
       } else {
         console.error("Character " + character + " can not be encoded in C40")
       }
-      
+
       return codewords
     }
-    
+
     // Given an index, checks if a string at the specified index fits the format ^000 through ^255
     function isEscaped(test, startIndex) {
       // Starts with a ^
       if (test.charAt(startIndex) != "^") {
         return false
       }
-      
+
       // Make sure we have at least 3 chars after the ^
       if (startIndex + 3 >= test.length) {
         return false
       }
-      
+
       // First number is 0 or 1
       if (test.charAt(startIndex + 1) == "0" || test.charAt(startIndex + 1) == "1") {
         // Second and third number are 0 through 9
@@ -211,7 +179,7 @@ jQuery(($) => {
           return true
         }
       }
-      
+
       // First number is 2
       if (test.charAt(startIndex + 1) == "2") {
         // Second and third number are 0 through 5
@@ -220,16 +188,16 @@ jQuery(($) => {
           return true
         }
       }
-      
+
       return false
     }
-    
+
     // We don't want to double encode already escaped values like ^123
     // This lets us pass through values like ^234 = Reader Programming
     // To do this, we first split the string up into encodable segments
     // For example: segments = ["abc", "^123", "^234", "abcdef"]
     segments = []
-    
+
     currentSegment = ""
     for (i = 0; i < barcode.length; i++) {
       if (isEscaped(barcode, i)) {
@@ -246,7 +214,7 @@ jQuery(($) => {
     if (currentSegment.length > 0) {
       segments.push(currentSegment)
     }
-    
+
     // Now we can encode each segment or pass it through
     encodedBarcode = ""
     for (currentSegment = 0; currentSegment < segments.length; currentSegment++) {
@@ -263,11 +231,11 @@ jQuery(($) => {
       } else {
         // We use a 2D array so we don't lose track of which char leads to which codewords
         charCodewords = []
-        
+
         for (i = 0; i < segment.length; i++) {
           charCodewords.push(getCodewords(segment.charAt(i)))
         }
-        
+
         // The number of characters at the end we'll unlatch and use ASCII encoding for
         // We calculate this by removing a character at a time until the number of codewords in this segment is a multiple of 3
         // This could be 0, or it could even be the whole segment
@@ -278,18 +246,18 @@ jQuery(($) => {
           for (i = 0; i < charCodewords.length - unlatchChars; i++) {
             codewordLength += charCodewords[i].length
           }
-          
+
           // We stop when we have removed enough chars that the C40 length is a multiple of 3
           if (codewordLength % 3 == 0) {
             break
           }
         }
-        
+
         // Only switch to C40 mode if we have characters in C40 to encode
         if (charCodewords.length - unlatchChars > 0) {
           encodedBarcode += "^230"
         }
-        
+
         // Now we can calculate the C40 encoding by chunks of 3
         currentChunk = []
         for (i = 0; i < charCodewords.length - unlatchChars; i++) {
@@ -305,12 +273,12 @@ jQuery(($) => {
             }
           }
         }
-        
+
         // Switch to ASCII mode if we encoded any C40 characters
         if (charCodewords.length - unlatchChars > 0) {
           encodedBarcode += "^254"
         }
-        
+
         for (i = segment.length - unlatchChars; i < segment.length; i++) {
           // Currently with the raw option, everything has to be encoded with ^###
           // Raw value is ASCII + 1
@@ -318,12 +286,12 @@ jQuery(($) => {
         }
       }
     }
-    
+
     // The ^129 here specifies end of message
     // Which tells the barcode reader to ignore any remaining padding symbols
     return encodedBarcode + "^129"
   }
-    
+
   /* /////////////////////////////////////////////////// */
   //                   Core Functions                    //
   /* /////////////////////////////////////////////////// */
@@ -331,37 +299,26 @@ jQuery(($) => {
   function populateBarcodes () {
     const model = barcOwned.getModelByName(barcodeScannerSelect.val())
     const runMode = runModeSelect.val()
-
-    const payloadScript = Object.assign({ type: 'payload' }, getPayloadScript({ name: payloadScriptSelect.val() }))
-    const setupScripts = []
-
     barcodes = []
 
-    payloadScript['setup-dependencies'] && payloadScript['setup-dependencies'].forEach((dependency) => {
-      const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
-
-      setupScripts.push(Object.assign({ type: 'setup' }, getSetupScript({ scriptName: dependencyName })))
-    })
-
     /* JAVASCRIPT CHANGES FOR THE JAVASCRIPT THRONE */
-    
+
     // This should be exposed as a UI option somehow, choose 1d or 2d
-    use2DCode = true
-    
-    if (runMode === 'Setup Only' || runMode === 'Setup + Payload') {
-      setupScripts.forEach((setupScript) => {
-        importBarcodeData(barcOwned.getBarcodeData(setupScript, model))
+    const use2DCode = true
+    const files = JSON.parse(localStorage.getItem('editor-file-data'))
+    const payloadText = files[localStorage.getItem('editor-file-selected')]
+    const payloadData = JSON.parse(payloadText)
+
+    importBarcodeData(barcOwned.getBarcodeData(Object.assign({}, payloadData, { type: 'setup' }), model))
+
+    // We can only aggregate the setup, payloads need to remain distinct
+    if (use2DCode) {
+      barcodes = aggregate(barcodes)
+      barcodes.forEach((barcode) => {
+        Logger.debug(["Generated aggregate barcode:",barcode.code])
       })
-      
-      // We can only aggregate the setup, payloads need to remain distinct
-      if (use2DCode) {
-        barcodes = aggregate(barcodes)
-        barcodes.forEach((barcode) => {
-          Logger.debug(["Generated aggregate barcode:",barcode.code]) 
-        })
-      }
     }
-    
+
     // This should be in the Symbol model JS but I don't want to think about how to scope encodeC40 right now
     function aggregate(setupBarcodes) {
       // Options might need to be done before the first N6?
@@ -370,7 +327,7 @@ jQuery(($) => {
         "S2681000" + // Config title follows?
         "barcOwned       " + // Configuration title
         "N5" // Begin programming codes
-      
+
       setupBarcodes.forEach((barcode) => {
         // FNC3 isn't needed in aggregate
         aggregateBarcode += barcode.code.replace("^FNC3", "")
@@ -385,12 +342,10 @@ jQuery(($) => {
 		}
       }]
     }
-	
-    /* <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3 */
 
-    if (runMode === 'Payload Only' || runMode === 'Setup + Payload') {
-      importBarcodeData(barcOwned.getBarcodeData(payloadScript, model))
-    }
+    importBarcodeData(barcOwned.getBarcodeData(Object.assign({}, payloadData, { type: 'payload' }), model))
+
+    /* <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3 */
 
     function importBarcodeData (barcodeData) {
       barcodeData.barcodes.forEach((barcode) => {
@@ -515,135 +470,6 @@ jQuery(($) => {
     barcodeWriter.bitmap().show(canvas, 'N') // "normal"
   }
 
-  /* /////////////////////////////////////////////////// */
-  //               Script Manifest Loaders               //
-  /* /////////////////////////////////////////////////// */
-
-  function populateSetupScripts (cb) {
-    const basePath = 'scanner-setup-scripts'
-    getScriptsManifest(basePath, (manifest) => {
-      manifest.forEach((scriptName) => {
-        getScript(basePath, scriptName, (data) => {
-          data.scriptName = scriptName
-          setupScripts.push(data)
-        })
-
-        // All setup scripts have been loaded
-        if (manifest.slice(-1)[0] === scriptName) {
-          if (typeof cb !== 'undefined') {
-            cb()
-          }
-        }
-      })
-    })
-  }
-
-  function populatePayloadScripts () {
-    const basePath = 'scanner-payloads'
-    getScriptsManifest(basePath, (manifest) => {
-      manifest.forEach((scriptName) => {
-        getScript(basePath, scriptName, (data) => {
-          data.scriptName = scriptName
-          payloadScripts.push(data)
-          loadPayload(getPayloadScript({ scriptName }))
-        })
-      })
-
-      // Verify payload dependencies, and add to UI
-      function loadPayload (script) {
-        let dependenciesMet = true
-
-        script['setup-dependencies'] && script['setup-dependencies'].forEach((dependency) => {
-          const dependencyName = dependency.endsWith('.json') ? dependency : dependency.concat('.json')
-
-          if (!getSetupScript({ scriptName: dependencyName })) {
-            dependenciesMet = false
-          }
-        })
-
-        if (dependenciesMet) {
-          payloadScriptSelect.append(`<option>${script.name}</option>`)
-          populateBarcodes()
-          populateScriptDupesSelect()
-          populateSetupScriptList()
-        } else {
-          console.warn(`Setup dependencies for payload ${script.name} couldn't be loaded, payload will be unavailable to run`)
-        }
-      }
-    })
-  }
-
-  function getScriptsManifest (basePath, cb) {
-    function dataHandler (data) {
-      cb(data)
-    }
-
-    $.ajax({
-      url: `${basePath}/manifest.json`,
-      dataType: 'json'
-    })
-      .done((data) => {
-        dataHandler(data)
-      })
-      .fail((jqXHR, textStatus, errorThrown) => {
-        console.info('Custom manifest not found, falling back to default')
-
-        $.ajax({
-          url: `${basePath}/manifest.example.json`,
-          dataType: 'json'
-        })
-          .done((data) => { dataHandler(data) })
-          .fail((jqXHR, textStatus, errorThrown) => {
-            throw new Error(errorThrown)
-          })
-      })
-  }
-
-  function getScript (basePath, scriptName, cb) {
-    function dataHandler (data) {
-      cb(data)
-    }
-
-    $.ajax({
-      url: `${basePath}/${scriptName}`,
-      dataType: 'json'
-    })
-      .done((data) => {
-        dataHandler(data)
-      })
-      .fail((jqXHR, textStatus, errorThrown) => {
-        throw new Error(`Failed to load script ${scriptName} \n ${errorThrown.message}`)
-      })
-  }
-
-  function getSetupScript (filter, scriptName) {
-    return setupScripts.filter((script) => {
-      let match = true
-
-      Object.getOwnPropertyNames(filter).forEach((filterCondition) => {
-        if (script[filterCondition] !== filter[filterCondition]) {
-          match = false
-        }
-      })
-
-      return match
-    })[0]
-  }
-
-  function getPayloadScript (filter, scriptName) {
-    return payloadScripts.filter((script) => {
-      let match = true
-
-      Object.getOwnPropertyNames(filter).forEach((filterCondition) => {
-        if (script[filterCondition] !== filter[filterCondition]) {
-          match = false
-        }
-      })
-
-      return match
-    })[0]
-  }
-
   function barcodesHaveAdjacentDuplicates (barcodes) {
     let previousBarcode
     let dupesExist = false
@@ -669,4 +495,7 @@ jQuery(($) => {
 
     return (visibleBottom - visibleTop)
   }
+
+  populateBarcodes()
+  populateScriptDupesSelect()
 })
