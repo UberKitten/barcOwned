@@ -8,11 +8,14 @@ from aiohttp import web
 from aiohttp_index import IndexMiddleware
 
 PROJECT_ROOT = path.dirname(path.abspath(__file__))
-PAYLOADS_ROOT = path.join(PROJECT_ROOT, 'app', 'payloads')
+PAYLOADS_ROOT = path.join(PROJECT_ROOT, 'payloads')
 
 async def handle_manifest(request):
 	onlyfiles = [f for f in listdir(PAYLOADS_ROOT) if path.isfile(path.join(PAYLOADS_ROOT, f))]
 	return web.Response(text=json.dumps(onlyfiles))
+
+async def handle_runmode(request):
+	return web.Response(text=runMode)
 
 async def handle_payload_put(request):
   if runMode != "private":
@@ -22,19 +25,36 @@ async def handle_payload_put(request):
   with open(path.join(PAYLOADS_ROOT, payloadName), 'w+') as file:
     file.write(payload)
   return web.Response(status=204)
-  
+
 app = web.Application(middlewares=[IndexMiddleware()])
+
 app.router.add_route('GET',
-					path='/app/payloads/manifest.json',
+					path='/payloads/manifest.json',
 					handler=handle_manifest)
+
 app.router.add_route('PUT',
-					path='/app/payloads/{payload}',
+					path='/payloads/{payload}',
 					handler=handle_payload_put)
-					
+
+app.router.add_route('GET',
+					path='/runmode',
+					handler=handle_runmode)
+
 app.router.add_static('/app',
-					path=path.join(PROJECT_ROOT, 'app'),
+					path=path.join(PROJECT_ROOT, 'app/build'),
 					name='app',
 					show_index=True)
+
+app.router.add_static('/editor',
+					path=path.join(PROJECT_ROOT, 'app/build'),
+					name='app_editor',
+					show_index=True)
+
+app.router.add_static('/run',
+					path=path.join(PROJECT_ROOT, 'app/build'),
+					name='app_run',
+					show_index=True)
+
 app.router.add_static('/',
 					path=PROJECT_ROOT,
 					name='root',

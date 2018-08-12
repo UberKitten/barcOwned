@@ -1,6 +1,7 @@
 /* global localStorage, FileReader, alert */
 
 import React, { Component } from 'react'
+import axios from 'axios'
 import AceEditor from 'react-ace'
 import 'brace/mode/json'
 import 'brace/theme/monokai'
@@ -15,7 +16,8 @@ class Editor extends Component {
 
     this.state = {
       selectedFile: '',
-      fileData: {}
+      fileData: {},
+      runMode: null
     }
 
     this.fileInput = React.createRef()
@@ -27,24 +29,64 @@ class Editor extends Component {
   }
 
   componentDidMount () {
-    let selectedFile = localStorage.getItem('editor-file-selected')
-    let fileData = localStorage.getItem('editor-file-data')
+    const selectedFile = localStorage.getItem('editor-file-selected')
+    const localFileData = JSON.parse(localStorage.getItem('editor-file-data'))
 
-    const demoFiles = {
-      'testfilename.json': '{ "comment": "Test File" }',
-      'untitled-new-payload.json': '{ "comment": "New File" }'
-    }
-
-    selectedFile = selectedFile || 'untitled-new-payload.json'
-    fileData = fileData ? JSON.parse(fileData) : demoFiles
-
-    this.setState({ selectedFile, fileData })
-    this.saveFileData(fileData)
-    this.saveSelectedFile(selectedFile)
+    this.getFiles()
+      .then((fileData) => {
+        this.setState({ selectedFile, fileData: Object.assign({}, fileData, localFileData) })
+      })
+      .catch((error) => {
+        console.error(error)
+        alert('Fatal error: no connection to server')
+      })
   }
 
-  saveFileData (data) {
-    localStorage.setItem('editor-file-data', JSON.stringify(data))
+  getFiles () {
+    return new Promise((resolve, reject) => {
+      axios.get('/payloads/manifest.json')
+        .then((files) => {
+          const fileDataRequests = []
+
+          files.data.forEach((file) => {
+            fileDataRequests.push(axios.get(`/payloads/${file}`))
+          })
+
+          return Promise.all(fileDataRequests)
+        })
+        .then((responses) => {
+          const fileData = {}
+
+          responses.forEach((response) => {
+            const fileURL = response.request.responseURL
+            fileData[fileURL.substring(fileURL.lastIndexOf('/') + 1)] = response.request.responseText
+          })
+
+          resolve(fileData)
+        })
+        .catch((error) => {
+          reject(error)
+        })
+    })
+  }
+
+  saveFileData (fileName, fileContent) {
+    const fileData = Object.assign({}, this.state.fileData)
+    fileData[fileName] = fileContent
+    localStorage.setItem('editor-file-data', JSON.stringify(fileData))
+
+    this.setState({ fileData })
+
+    if (!this.state.runMode || this.state.runMode === 'private') {
+      axios.put(`/payloads/${fileName}`, fileContent)
+        .then(() => {
+          // Upload succeeded
+        })
+        .catch((error) => {
+          console.error(error)
+          this.setState({ runMode: 'public' })
+        })
+    }
   }
 
   saveSelectedFile (file) {
@@ -57,30 +99,25 @@ class Editor extends Component {
       return
     }
 
-    const fileData = Object.assign({}, this.state.fileData)
     const fileReader = new FileReader()
 
     return new Promise((resolve, reject) => {
       fileReader.addEventListener('loadend', () => {
-        let fileNameIteration = 0
-        const fileName = file.name.substring(0, file.name.length - 5)
+        const fileData = Object.assign({}, this.state.fileData)
+        let fileNameIteration = 1
+        let fileName = file.name
 
         if (fileData[file.name]) {
-          fileNameIteration++
+          fileName = file.name.substring(0, file.name.length - 5)
 
           while (fileData[`${fileName}-${fileNameIteration}.json`]) {
             fileNameIteration++
           }
+
+          fileName = `${fileName}-${fileNameIteration}.json`
         }
 
-        if (fileNameIteration > 0) {
-          fileData[`${fileName}-${fileNameIteration}.json`] = fileReader.result
-        } else {
-          fileData[file.name] = fileReader.result
-        }
-
-        this.setState({ fileData })
-        this.saveFileData(fileData)
+        this.saveFileData(fileName, fileReader.result)
         resolve()
       })
 
@@ -89,10 +126,7 @@ class Editor extends Component {
   }
 
   onEditorChange (newCode) {
-    const fileData = Object.assign({}, this.state.fileData)
-    fileData[this.state.selectedFile] = newCode
-    this.setState({ fileData })
-    this.saveFileData(fileData)
+    this.saveFileData(this.state.selectedFile, newCode)
   }
 
   onFileSelected (event, file) {
