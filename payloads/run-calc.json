@@ -1,7 +1,6 @@
 {
   "name": "Run calc.exe",
   "description": "Open the Windows Run dialog and open Calculator",
-
   "setup": {
     "options": [],
     "rules": [
