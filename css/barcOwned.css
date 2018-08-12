@@ -50,6 +50,7 @@ main {
 .controls .form-row {
   margin-left: 0;
   margin-right: 0;
+  margin-top: 10px;
 }
 
 .controls .form-group {

@@ -33,8 +33,10 @@ class Editor extends Component {
     const localFileData = JSON.parse(localStorage.getItem('editor-file-data'))
 
     this.getFiles()
-      .then((fileData) => {
-        this.setState({ selectedFile, fileData: Object.assign({}, fileData, localFileData) })
+      .then((remoteFileData) => {
+        const fileData = Object.assign({}, remoteFileData, localFileData)
+        this.setState({ selectedFile, fileData })
+        localStorage.setItem('editor-file-data', JSON.stringify(fileData))
       })
       .catch((error) => {
         console.error(error)
@@ -136,7 +138,7 @@ class Editor extends Component {
   }
 
   onClickRunAction (event) {
-    event.preventDefault()
+    //
   }
 
   onClickImportAction (event) {
@@ -200,7 +202,7 @@ class Editor extends Component {
 
           <main>
             <ul className='padded-list'>
-              <li><a href='' onClick={(event) => this.onClickRunAction(event)}>
+              <li><a href='/run/index.html' onClick={(event) => this.onClickRunAction(event)}>
                 <FontAwesomeIcon icon={faPlayCircle} />
                 Run
               </a></li>

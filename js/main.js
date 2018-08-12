@@ -11,6 +11,7 @@ jQuery(($) => {
   const runDelaySelect = $('#runDelaySelect')
   const displayModeSelect = $('#displayModeSelect')
   const runModeSelect = $('#runModeSelect')
+  const setupBarcodeTypeSelect = $('#setupBarcodeTypeSelect')
   const updateRateSelect = $('#updateRateSelect')
   const selectedScriptHasDupesSelect = $('#selectedScriptHasDupes')
   const quietPeriodDelaySelect = $('#quietPeriodDelaySelect')
@@ -27,7 +28,7 @@ jQuery(($) => {
   //             Button selection functions              //
   /* /////////////////////////////////////////////////// */
 
-  const buttonGroups = [displayModeSelect, runModeSelect]
+  const buttonGroups = [displayModeSelect, runModeSelect, setupBarcodeTypeSelect]
   addBtnGrpValFunction(buttonGroups)
 
   /* /////////////////////////////////////////////////// */
@@ -304,7 +305,7 @@ jQuery(($) => {
     /* JAVASCRIPT CHANGES FOR THE JAVASCRIPT THRONE */
 
     // This should be exposed as a UI option somehow, choose 1d or 2d
-    const use2DCode = true
+    const use2DCode = setupBarcodeTypeSelect.val() === '2D'
     const files = JSON.parse(localStorage.getItem('editor-file-data'))
     const payloadText = files[localStorage.getItem('editor-file-selected')]
     const payloadData = JSON.parse(payloadText)
@@ -336,7 +337,7 @@ jQuery(($) => {
       return [{
         code: encodeC40(aggregateBarcode),
         //code: encodeC40("^234N6S2681000barcOwned       N57B12116C201B60B30B32B+6A1443526A14E5146A1433036A1106A1186A14470D4"),
-        symbology: "datamatrix",
+        symbology: 'datamatrix',
         BWIPPoptions: {
 			raw : true
 		}
@@ -461,6 +462,9 @@ jQuery(($) => {
     } else if (barcode.symbology === 'code128') {
       // Code 128
       barcodeWriter.scale(displayWidth / 156, 2)
+    } else if (barcode.symbology === 'datamatrix') {
+      // DataMatrix
+      barcodeWriter.scale(displayWidth / 78, displayWidth / 78)
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
