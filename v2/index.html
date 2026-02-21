@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Like a Rubber Ducky, but with barcodes. Program barcode scanners to deliver HID keyboard payloads.">
+  <meta name="author" content="Astra West">
+  <meta name="theme-color" content="#1a1a2e">
+  
+  <title>barcOwned</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-brand">
+        <span class="nav-logo">⌘</span>
+        <span class="nav-title">barcOwned</span>
+      </div>
+      
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="editor">
+          <span class="nav-tab-icon">✎</span>
+          <span class="nav-tab-label">Editor</span>
+        </button>
+        <button class="nav-tab" data-tab="runner">
+          <span class="nav-tab-icon">▶</span>
+          <span class="nav-tab-label">Run</span>
+        </button>
+        <button class="nav-tab" data-tab="share">
+          <span class="nav-tab-icon">↗</span>
+          <span class="nav-tab-label">Share</span>
+        </button>
+      </div>
+      
+      <div class="nav-links">
+        <a href="https://github.com/UberKitten/barcowned/wiki" target="_blank" rel="noopener" class="nav-link">
+          Docs
+        </a>
+        <a href="https://github.com/UberKitten/barcowned" target="_blank" rel="noopener" class="nav-link">
+          GitHub
+        </a>
+      </div>
+    </nav>
+
+    <!-- Tab Panels -->
+    <main class="main">
+      <!-- Editor Panel -->
+      <section class="panel panel-editor active" data-panel="editor">
+        <div class="editor-layout">
+          <!-- Payload List Sidebar -->
+          <aside class="payload-sidebar">
+            <div class="payload-sidebar-header">
+              <h2>Payloads</h2>
+              <button class="btn btn-sm btn-primary" id="newPayloadBtn">+ New</button>
+            </div>
+            
+            <div class="payload-list" id="payloadList">
+              <!-- Populated by JS -->
+            </div>
+            
+            <div class="payload-sidebar-footer">
+              <button class="btn btn-sm btn-ghost" id="importBtn">Import</button>
+              <button class="btn btn-sm btn-ghost" id="exportBtn">Export</button>
+            </div>
+          </aside>
+          
+          <!-- Code Editor -->
+          <div class="editor-main">
+            <div class="editor-header">
+              <input type="text" class="payload-name-input" id="payloadName" placeholder="Payload name...">
+              <div class="editor-actions">
+                <button class="btn btn-sm btn-ghost" id="validateBtn">Validate</button>
+                <button class="btn btn-sm btn-primary" id="saveBtn">Save</button>
+              </div>
+            </div>
+            
+            <div class="editor-container" id="editorContainer">
+              <!-- CodeMirror mounts here -->
+            </div>
+            
+            <div class="editor-status" id="editorStatus">
+              <!-- Validation messages -->
+            </div>
+          </div>
+          
+          <!-- Live Preview -->
+          <aside class="preview-sidebar">
+            <div class="preview-header">
+              <h3>Preview</h3>
+              <span class="preview-count" id="previewCount">0 barcodes</span>
+            </div>
+            
+            <div class="preview-barcodes" id="previewBarcodes">
+              <!-- Barcode previews render here -->
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Runner Panel -->
+      <section class="panel panel-runner" data-panel="runner">
+        <div class="runner-layout">
+          <!-- Controls -->
+          <div class="runner-controls">
+            <div class="control-group">
+              <label for="modelSelect">Scanner Model</label>
+              <select id="modelSelect" class="select">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            
+            <div class="control-group">
+              <label>Display Mode</label>
+              <div class="btn-group" id="displayModeGroup">
+                <button class="btn btn-sm" data-value="manual">Manual</button>
+                <button class="btn btn-sm active" data-value="auto">Auto</button>
+                <button class="btn btn-sm" data-value="list">List</button>
+              </div>
+            </div>
+            
+            <div class="control-group" data-show-for="auto">
+              <label for="autoRate">Speed</label>
+              <select id="autoRate" class="select">
+                <option value="0.25">0.25 Hz (4s)</option>
+                <option value="0.4" selected>0.4 Hz (2.5s)</option>
+                <option value="0.5">0.5 Hz (2s)</option>
+                <option value="1.0">1.0 Hz (1s)</option>
+                <option value="2.0">2.0 Hz (0.5s)</option>
+              </select>
+            </div>
+            
+            <div class="control-group" data-show-for="auto">
+              <label for="startDelay">Start Delay</label>
+              <select id="startDelay" class="select">
+                <option value="0">None</option>
+                <option value="1">1 second</option>
+                <option value="2">2 seconds</option>
+                <option value="3" selected>3 seconds</option>
+                <option value="5">5 seconds</option>
+              </select>
+            </div>
+            
+            <div class="runner-actions">
+              <button class="btn btn-lg btn-primary" id="runBtn">
+                <span class="btn-icon">▶</span>
+                <span>Run</span>
+              </button>
+              <button class="btn btn-lg btn-danger hidden" id="stopBtn">
+                <span class="btn-icon">■</span>
+                <span>Stop</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Barcode Display -->
+          <div class="runner-display">
+            <div class="barcode-container" id="barcodeContainer">
+              <canvas id="barcodeCanvas"></canvas>
+              <div class="barcode-placeholder" id="barcodePlaceholder">
+                Select a payload and click Run
+              </div>
+            </div>
+            
+            <div class="runner-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+              <span class="progress-text" id="progressText">0 / 0</span>
+            </div>
+            
+            <div class="runner-nav hidden" id="runnerNav">
+              <button class="btn btn-lg" id="prevBtn">← Prev</button>
+              <button class="btn btn-lg btn-primary" id="nextBtn">Next →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Share Panel -->
+      <section class="panel panel-share" data-panel="share">
+        <div class="share-layout">
+          <div class="share-content">
+            <h2>Share Payload</h2>
+            <p class="share-description">
+              Generate a QR code to transfer this payload to your phone.
+              Scan it with your camera to open barcOwned with the payload loaded.
+            </p>
+            
+            <div class="share-qr">
+              <img id="shareQrCode" src="" alt="QR Code">
+            </div>
+            
+            <div class="share-url">
+              <input type="text" id="shareUrl" readonly>
+              <button class="btn btn-sm btn-primary" id="copyUrlBtn">Copy</button>
+            </div>
+            
+            <div class="share-actions">
+              <button class="btn btn-primary" id="generateShareBtn">Generate Share Link</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Import Modal -->
+  <dialog id="importModal" class="modal">
+    <div class="modal-content">
+      <h2>Import Payload</h2>
+      <textarea id="importTextarea" placeholder="Paste payload JSON here..."></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="importCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="importConfirmBtn">Import</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
