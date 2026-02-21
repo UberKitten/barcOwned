@@ -644,12 +644,17 @@ body {
 .modal {
   position: fixed;
   inset: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+}
+
+.modal[open] {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  border: none;
-  padding: 0;
 }
 
 .modal::backdrop {
