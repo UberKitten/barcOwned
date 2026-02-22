@@ -17,7 +17,7 @@
     <!-- Navigation -->
     <nav class="nav">
       <div class="nav-brand">
-        <button class="nav-menu-btn" id="menuToggle" aria-label="Toggle menu">☰</button>
+        <button class="nav-menu-btn" id="menuToggle" aria-label="Toggle sidebar">☰</button>
         <span class="nav-logo">⌘</span>
         <span class="nav-title">barcOwned</span>
       </div>
@@ -32,10 +32,10 @@
       </div>
     </nav>
 
-    <!-- Main Layout -->
+    <!-- Main Layout: 3-column IDE -->
     <div class="app-layout">
-      <!-- Left Sidebar: Payload List -->
-      <aside class="sidebar" id="sidebar">
+      <!-- Left Sidebar: Payload List (File Explorer) -->
+      <aside class="sidebar sidebar-left" id="sidebarLeft">
         <div class="sidebar-header">
           <h2>Payloads</h2>
         </div>
@@ -51,170 +51,180 @@
         </div>
       </aside>
 
-      <!-- Main Content Area -->
+      <!-- Center: Code Editor (Main Area) -->
       <main class="main-content" id="mainContent">
-        <!-- Empty State -->
+        <!-- Empty State (shown when no payload selected) -->
         <div class="empty-state" id="emptyState">
           <div class="empty-state-icon">⌘</div>
           <h2>Select a Payload</h2>
           <p>Choose a payload from the sidebar to get started, or create a new one.</p>
         </div>
 
-        <!-- Payload View (hidden until payload selected) -->
-        <div class="payload-view hidden" id="payloadView">
-          <!-- Payload Header -->
-          <header class="payload-header">
-            <h1 class="payload-title" id="payloadTitle">Payload Name</h1>
-            <span class="payload-badge" id="payloadBadge">0 barcodes</span>
+        <!-- Editor View (shown when payload selected) -->
+        <div class="editor-view hidden" id="editorView">
+          <!-- Editor Header -->
+          <header class="editor-header">
+            <div class="editor-title-row">
+              <input type="text" class="editor-title-input" id="payloadNameInput" placeholder="Payload name..." readonly>
+              <span class="editor-badge" id="barcodeBadge">0 barcodes</span>
+            </div>
+            <p class="editor-description" id="payloadDescription"></p>
           </header>
 
-          <!-- Section 1: Editor (Collapsible) -->
-          <section class="section section-editor" id="editorSection">
-            <button class="section-header" id="editorToggle">
-              <span class="section-chevron">▶</span>
-              <h2>Editor</h2>
-              <span class="section-badge" id="editorBadge">0 barcodes</span>
-            </button>
-            
-            <div class="section-content" id="editorContent">
-              <div class="editor-row">
-                <input type="text" class="payload-name-input" id="payloadName" placeholder="Payload name...">
-                <div class="editor-actions">
-                  <button class="btn btn-sm btn-ghost" id="validateBtn">Validate</button>
-                  <button class="btn btn-sm btn-primary" id="saveBtn">Save</button>
-                </div>
-              </div>
-              
-              <div class="editor-container" id="editorContainer">
-                <!-- CodeMirror mounts here -->
-              </div>
-              
-              <div class="editor-status" id="editorStatus">
-                <!-- Validation messages -->
-              </div>
+          <!-- Toolbar -->
+          <div class="editor-toolbar">
+            <div class="toolbar-group">
+              <button class="toolbar-btn" id="saveBtn" title="Save payload">
+                <span class="toolbar-icon">💾</span>
+                <span class="toolbar-label">Save</span>
+              </button>
+              <button class="toolbar-btn" id="validateBtn" title="Validate JSON">
+                <span class="toolbar-icon">✓</span>
+                <span class="toolbar-label">Validate</span>
+              </button>
             </div>
-          </section>
+            
+            <div class="toolbar-separator"></div>
+            
+            <div class="toolbar-group">
+              <select id="modelSelect" class="toolbar-select" title="Scanner model">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            
+            <div class="toolbar-separator"></div>
+            
+            <div class="toolbar-group">
+              <button class="toolbar-btn toolbar-btn-primary" id="runBtn" title="Run payload">
+                <span class="toolbar-icon">▶</span>
+                <span class="toolbar-label">Run</span>
+              </button>
+              <button class="toolbar-btn" id="shareBtn" title="Share payload">
+                <span class="toolbar-icon">↗</span>
+                <span class="toolbar-label">Share</span>
+              </button>
+            </div>
+          </div>
 
-          <!-- Section 2: Runner (Main Focus) -->
-          <section class="section section-runner">
-            <div class="section-header static">
-              <h2>Run</h2>
-            </div>
-            
-            <div class="section-content">
-              <!-- Runner Controls -->
-              <div class="runner-controls">
-                <div class="control-row">
-                  <div class="control-group">
-                    <label for="modelSelect">Scanner Model</label>
-                    <select id="modelSelect" class="select">
-                      <!-- Populated by JS -->
-                    </select>
-                  </div>
-                  
-                  <div class="control-group">
-                    <label>Display Mode</label>
-                    <div class="btn-group" id="displayModeGroup">
-                      <button class="btn btn-sm" data-value="manual">Manual</button>
-                      <button class="btn btn-sm active" data-value="auto">Auto</button>
-                      <button class="btn btn-sm" data-value="list">List</button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="control-row" data-show-for="auto">
-                  <div class="control-group">
-                    <label for="autoRate">Speed</label>
-                    <select id="autoRate" class="select">
-                      <option value="0.25">0.25 Hz (4s)</option>
-                      <option value="0.4" selected>0.4 Hz (2.5s)</option>
-                      <option value="0.5">0.5 Hz (2s)</option>
-                      <option value="1.0">1.0 Hz (1s)</option>
-                      <option value="2.0">2.0 Hz (0.5s)</option>
-                    </select>
-                  </div>
-                  
-                  <div class="control-group">
-                    <label for="startDelay">Start Delay</label>
-                    <select id="startDelay" class="select">
-                      <option value="0">None</option>
-                      <option value="1">1 second</option>
-                      <option value="2">2 seconds</option>
-                      <option value="3" selected>3 seconds</option>
-                      <option value="5">5 seconds</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Barcode Display -->
-              <div class="barcode-area">
-                <div class="barcode-container" id="barcodeContainer">
-                  <canvas id="barcodeCanvas"></canvas>
-                  <div class="barcode-placeholder" id="barcodePlaceholder">
-                    Click <strong>Run</strong> to start
-                  </div>
-                </div>
-                
-                <div class="runner-progress">
-                  <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                  </div>
-                  <span class="progress-text" id="progressText">0 / 0</span>
-                </div>
-                
-                <div class="runner-nav" id="runnerNav">
-                  <button class="btn btn-lg" id="prevBtn">← Prev</button>
-                  <div class="runner-actions">
-                    <button class="btn btn-lg btn-primary" id="runBtn">
-                      <span class="btn-icon">▶</span>
-                      <span>Run</span>
-                    </button>
-                    <button class="btn btn-lg btn-danger hidden" id="stopBtn">
-                      <span class="btn-icon">■</span>
-                      <span>Stop</span>
-                    </button>
-                  </div>
-                  <button class="btn btn-lg" id="nextBtn">Next →</button>
-                </div>
-              </div>
-            </div>
-          </section>
+          <!-- CodeMirror Editor -->
+          <div class="editor-container" id="editorContainer">
+            <!-- CodeMirror mounts here -->
+          </div>
 
-          <!-- Section 3: Share (Compact) -->
-          <section class="section section-share">
-            <div class="section-header static">
-              <h2>Share</h2>
-            </div>
-            
-            <div class="section-content">
-              <div class="share-row">
-                <div class="share-qr">
-                  <canvas id="shareQrCanvas" width="200" height="200"></canvas>
-                  <div class="share-qr-placeholder" id="shareQrPlaceholder">
-                    Click Generate to create QR
-                  </div>
-                </div>
-                
-                <div class="share-actions">
-                  <p class="share-description">
-                    Scan with your phone to open this payload on mobile.
-                  </p>
-                  
-                  <div class="share-url-row">
-                    <input type="text" id="shareUrl" readonly placeholder="Click Generate...">
-                    <button class="btn btn-sm btn-ghost" id="copyUrlBtn">Copy</button>
-                  </div>
-                  
-                  <button class="btn btn-primary" id="generateShareBtn">Generate Share Link</button>
-                </div>
+          <!-- Status Bar -->
+          <div class="editor-statusbar" id="editorStatusbar">
+            <span class="status-validation" id="statusValidation">Ready</span>
+            <span class="status-spacer"></span>
+            <span class="status-position" id="statusPosition">Ln 1, Col 1</span>
+          </div>
+        </div>
+
+        <!-- Runner View (shown during run) -->
+        <div class="runner-view hidden" id="runnerView">
+          <header class="runner-header">
+            <h2 id="runnerTitle">Running: Payload Name</h2>
+            <button class="btn btn-ghost" id="backToEditorBtn">← Back to Editor</button>
+          </header>
+
+          <!-- Runner Controls -->
+          <div class="runner-controls">
+            <div class="control-group">
+              <label>Display Mode</label>
+              <div class="btn-group" id="displayModeGroup">
+                <button class="btn btn-sm" data-value="manual">Manual</button>
+                <button class="btn btn-sm active" data-value="auto">Auto</button>
               </div>
             </div>
-          </section>
+            
+            <div class="control-group" data-show-for="auto">
+              <label>Speed</label>
+              <select id="autoRate" class="select">
+                <option value="0.25">0.25 Hz (4s)</option>
+                <option value="0.4" selected>0.4 Hz (2.5s)</option>
+                <option value="0.5">0.5 Hz (2s)</option>
+                <option value="1.0">1.0 Hz (1s)</option>
+                <option value="2.0">2.0 Hz (0.5s)</option>
+              </select>
+            </div>
+            
+            <div class="control-group" data-show-for="auto">
+              <label>Start Delay</label>
+              <select id="startDelay" class="select">
+                <option value="0">None</option>
+                <option value="1">1 second</option>
+                <option value="2">2 seconds</option>
+                <option value="3" selected>3 seconds</option>
+                <option value="5">5 seconds</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Barcode Display -->
+          <div class="barcode-display">
+            <div class="barcode-container" id="barcodeContainer">
+              <canvas id="barcodeCanvas"></canvas>
+              <div class="barcode-label" id="barcodeLabel"></div>
+            </div>
+            
+            <div class="runner-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+              <span class="progress-text" id="progressText">0 / 0</span>
+            </div>
+            
+            <div class="runner-nav">
+              <button class="btn btn-lg" id="prevBtn">← Prev</button>
+              <button class="btn btn-lg btn-primary" id="startBtn">
+                <span>▶ Start</span>
+              </button>
+              <button class="btn btn-lg btn-danger hidden" id="stopBtn">
+                <span>■ Stop</span>
+              </button>
+              <button class="btn btn-lg" id="nextBtn">Next →</button>
+            </div>
+          </div>
         </div>
       </main>
+
+      <!-- Right Sidebar: Barcode Preview -->
+      <aside class="sidebar sidebar-right" id="sidebarRight">
+        <div class="sidebar-header">
+          <h2>Preview</h2>
+          <button class="sidebar-toggle" id="previewToggle" aria-label="Toggle preview">×</button>
+        </div>
+        
+        <div class="preview-list" id="previewList">
+          <div class="preview-empty">
+            Select a payload to preview barcodes
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
+
+  <!-- Share Modal -->
+  <dialog id="shareModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Share Payload</h2>
+        <button class="modal-close" id="shareCloseBtn">×</button>
+      </div>
+      
+      <div class="share-qr-container">
+        <canvas id="shareQrCanvas" width="200" height="200"></canvas>
+      </div>
+      
+      <p class="share-description">
+        Scan with your phone to open this payload on mobile.
+      </p>
+      
+      <div class="share-url-row">
+        <input type="text" id="shareUrl" readonly placeholder="Generating...">
+        <button class="btn btn-sm btn-primary" id="copyUrlBtn">Copy</button>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Import Modal -->
   <dialog id="importModal" class="modal">

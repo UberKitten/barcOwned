@@ -1,7 +1,7 @@
 /**
  * barcOwned v2 Main Entry Point
  * 
- * Single-page layout with sidebar navigation.
+ * Editor-centric IDE layout with barcode preview sidebar.
  */
 
 import './style.css';
@@ -31,24 +31,30 @@ interface AppState {
   currentPayloadId: string | null;
   currentPayload: Payload | null;
   barcodeData: BarcodeData | null;
+  setupCount: number;
+  payloadCount: number;
   currentBarcodeIndex: number;
   isRunning: boolean;
   runInterval: number | null;
   settings: Settings;
   editorDirty: boolean;
   isPreset: boolean;
+  view: 'editor' | 'runner';
 }
 
 const state: AppState = {
   currentPayloadId: null,
   currentPayload: null,
   barcodeData: null,
+  setupCount: 0,
+  payloadCount: 0,
   currentBarcodeIndex: 0,
   isRunning: false,
   runInterval: null,
   settings: loadSettings(),
   editorDirty: false,
   isPreset: false,
+  view: 'editor',
 };
 
 // CodeMirror editor instance (loaded dynamically)
@@ -62,47 +68,50 @@ const $ = <T extends HTMLElement>(selector: string): T | null =>
   document.querySelector(selector);
 
 // Layout
-const sidebar = $<HTMLElement>('#sidebar')!;
+const sidebarLeft = $<HTMLElement>('#sidebarLeft')!;
 const menuToggle = $<HTMLButtonElement>('#menuToggle')!;
 const emptyState = $<HTMLDivElement>('#emptyState')!;
-const payloadView = $<HTMLDivElement>('#payloadView')!;
+const editorView = $<HTMLDivElement>('#editorView')!;
+const runnerView = $<HTMLDivElement>('#runnerView')!;
 
 // Payload list
 const payloadList = $<HTMLDivElement>('#payloadList')!;
 
-// Payload header
-const payloadTitle = $<HTMLElement>('#payloadTitle')!;
-const payloadBadge = $<HTMLSpanElement>('#payloadBadge')!;
+// Editor header
+const payloadNameInput = $<HTMLInputElement>('#payloadNameInput')!;
+const barcodeBadge = $<HTMLSpanElement>('#barcodeBadge')!;
+const payloadDescription = $<HTMLParagraphElement>('#payloadDescription')!;
 
-// Editor section
-const editorSection = $<HTMLElement>('#editorSection')!;
-const editorToggle = $<HTMLButtonElement>('#editorToggle')!;
-const editorBadge = $<HTMLSpanElement>('#editorBadge')!;
-const payloadNameInput = $<HTMLInputElement>('#payloadName')!;
-const editorContainer = $<HTMLDivElement>('#editorContainer')!;
-const editorStatus = $<HTMLDivElement>('#editorStatus')!;
-
-// Runner section
+// Toolbar
 const modelSelect = $<HTMLSelectElement>('#modelSelect')!;
+
+// Editor
+const editorContainer = $<HTMLDivElement>('#editorContainer')!;
+const statusValidation = $<HTMLSpanElement>('#statusValidation')!;
+const statusPosition = $<HTMLSpanElement>('#statusPosition')!;
+
+// Preview
+const previewList = $<HTMLDivElement>('#previewList')!;
+
+// Runner
+const runnerTitle = $<HTMLElement>('#runnerTitle')!;
 const displayModeGroup = $<HTMLDivElement>('#displayModeGroup')!;
 const autoRateSelect = $<HTMLSelectElement>('#autoRate')!;
 const startDelaySelect = $<HTMLSelectElement>('#startDelay')!;
-const runBtn = $<HTMLButtonElement>('#runBtn')!;
-const stopBtn = $<HTMLButtonElement>('#stopBtn')!;
 const barcodeCanvas = $<HTMLCanvasElement>('#barcodeCanvas')!;
-const barcodePlaceholder = $<HTMLDivElement>('#barcodePlaceholder')!;
+const barcodeLabel = $<HTMLDivElement>('#barcodeLabel')!;
 const progressFill = $<HTMLDivElement>('#progressFill')!;
 const progressText = $<HTMLSpanElement>('#progressText')!;
 const prevBtn = $<HTMLButtonElement>('#prevBtn')!;
 const nextBtn = $<HTMLButtonElement>('#nextBtn')!;
+const startBtn = $<HTMLButtonElement>('#startBtn')!;
+const stopBtn = $<HTMLButtonElement>('#stopBtn')!;
 const barcodeContainer = $<HTMLDivElement>('#barcodeContainer')!;
 
-// Share section
-const shareQrCanvas = $<HTMLCanvasElement>('#shareQrCanvas')!;
-const shareQrPlaceholder = $<HTMLDivElement>('#shareQrPlaceholder')!;
-const shareUrl = $<HTMLInputElement>('#shareUrl')!;
-
 // Modals
+const shareModal = $<HTMLDialogElement>('#shareModal')!;
+const shareQrCanvas = $<HTMLCanvasElement>('#shareQrCanvas')!;
+const shareUrl = $<HTMLInputElement>('#shareUrl')!;
 const importModal = $<HTMLDialogElement>('#importModal')!;
 const importTextarea = $<HTMLTextAreaElement>('#importTextarea')!;
 
@@ -111,16 +120,16 @@ const importTextarea = $<HTMLTextAreaElement>('#importTextarea')!;
 // ============================================
 
 menuToggle.addEventListener('click', () => {
-  sidebar.classList.toggle('open');
+  sidebarLeft.classList.toggle('open');
 });
 
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
   if (window.innerWidth <= 768 && 
-      sidebar.classList.contains('open') && 
-      !sidebar.contains(e.target as Node) &&
+      sidebarLeft.classList.contains('open') && 
+      !sidebarLeft.contains(e.target as Node) &&
       e.target !== menuToggle) {
-    sidebar.classList.remove('open');
+    sidebarLeft.classList.remove('open');
   }
 });
 
@@ -155,7 +164,7 @@ function renderPayloadList() {
       selectPayload((item as HTMLElement).dataset.id!);
       // Close mobile sidebar
       if (window.innerWidth <= 768) {
-        sidebar.classList.remove('open');
+        sidebarLeft.classList.remove('open');
       }
     });
   });
@@ -176,15 +185,15 @@ function selectPayload(id: string) {
     return;
   }
   
-  // Show payload view, hide empty state
-  emptyState.classList.add('hidden');
-  payloadView.classList.remove('hidden');
+  // Show editor view
+  showView('editor');
   
   // Update header
-  payloadTitle.textContent = state.currentPayload.name;
-  
-  // Update editor
   payloadNameInput.value = state.currentPayload.name;
+  payloadNameInput.readOnly = state.isPreset;
+  payloadDescription.textContent = state.currentPayload.description || '';
+  
+  // Update editor content
   if (editor) {
     const content = JSON.stringify(state.currentPayload, null, 2);
     editor.dispatch({
@@ -192,34 +201,37 @@ function selectPayload(id: string) {
     });
   }
   
-  // Set editor section collapsed for presets, expanded for user payloads
-  if (state.isPreset) {
-    editorSection.classList.remove('expanded');
-  } else {
-    editorSection.classList.add('expanded');
-  }
-  
-  // Update barcode data
+  // Update barcode data and preview
   updateBarcodeData();
+  renderPreview();
   
   // Re-render list to show selection
   renderPayloadList();
   
-  // Reset share section
-  shareQrPlaceholder.classList.remove('hidden');
-  shareUrl.value = '';
-  
   state.editorDirty = false;
+  updateStatusBar('Ready');
 }
 
 // ============================================
-// Editor Section
+// View Management
 // ============================================
 
-// Toggle editor section
-editorToggle.addEventListener('click', () => {
-  editorSection.classList.toggle('expanded');
-});
+function showView(view: 'editor' | 'runner') {
+  state.view = view;
+  
+  emptyState.classList.add('hidden');
+  editorView.classList.toggle('hidden', view !== 'editor');
+  runnerView.classList.toggle('hidden', view !== 'runner');
+  
+  if (view === 'runner') {
+    runnerTitle.textContent = `Running: ${state.currentPayload?.name || 'Payload'}`;
+    updateRunnerUI();
+  }
+}
+
+// ============================================
+// Editor
+// ============================================
 
 async function initEditor() {
   // Dynamically import CodeMirror
@@ -243,6 +255,10 @@ async function initEditor() {
           state.editorDirty = true;
           validateAndPreview();
         }
+        // Update cursor position
+        const pos = update.state.selection.main.head;
+        const line = update.state.doc.lineAt(pos);
+        statusPosition.textContent = `Ln ${line.number}, Col ${pos - line.from + 1}`;
       }),
     ],
   });
@@ -265,45 +281,106 @@ function validateAndPreview() {
     }
     
     state.currentPayload = payload;
-    editorStatus.textContent = '✓ Valid JSON';
-    editorStatus.className = 'editor-status success';
+    updateStatusBar('✓ Valid JSON', false);
     
     updateBarcodeData();
+    renderPreview();
   } catch (e) {
-    editorStatus.textContent = `✗ ${(e as Error).message}`;
-    editorStatus.className = 'editor-status error';
+    updateStatusBar(`✗ ${(e as Error).message}`, true);
   }
+}
+
+function updateStatusBar(message: string, isError = false) {
+  statusValidation.textContent = message;
+  statusValidation.classList.toggle('error', isError);
 }
 
 function updateBarcodeData() {
   if (!state.currentPayload) {
-    payloadBadge.textContent = '0 barcodes';
-    editorBadge.textContent = '0 barcodes';
+    barcodeBadge.textContent = '0 barcodes';
+    state.barcodeData = null;
+    state.setupCount = 0;
+    state.payloadCount = 0;
     return;
   }
   
   try {
     const model = getModel(state.settings.modelId);
     const engine = new BarcOwned(model);
+    
+    // Get counts for labeling
+    const setupData = engine.getSetupBarcodeData(state.currentPayload);
+    const payloadData = engine.getPayloadBarcodeData(state.currentPayload);
+    state.setupCount = setupData.barcodes.length;
+    state.payloadCount = payloadData.barcodes.length;
+    
+    // Get full barcode data
     const data = engine.getBarcodeData(state.currentPayload);
-    
     state.barcodeData = data;
-    const count = data.barcodes.length;
-    const label = `${count} barcode${count !== 1 ? 's' : ''}`;
-    payloadBadge.textContent = label;
-    editorBadge.textContent = label;
     
-    // Reset progress
-    progressFill.style.width = '0%';
-    progressText.textContent = `0 / ${count}`;
+    const total = data.barcodes.length;
+    barcodeBadge.textContent = `${total} barcode${total !== 1 ? 's' : ''}`;
   } catch (e) {
     console.error('Error generating barcode data:', e);
-    payloadBadge.textContent = 'Error';
-    editorBadge.textContent = 'Error';
+    barcodeBadge.textContent = 'Error';
+    state.barcodeData = null;
   }
 }
 
-// Editor actions
+// ============================================
+// Barcode Preview Sidebar
+// ============================================
+
+async function renderPreview() {
+  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
+    previewList.innerHTML = '<div class="preview-empty">No barcodes to preview</div>';
+    return;
+  }
+  
+  const { barcodes, symbology, BWIPPoptions } = state.barcodeData;
+  
+  // Build preview HTML
+  let html = '';
+  for (let i = 0; i < barcodes.length; i++) {
+    const isSetup = i < state.setupCount;
+    const type = isSetup ? 'setup' : 'payload';
+    const typeIndex = isSetup ? i + 1 : i - state.setupCount + 1;
+    const typeTotal = isSetup ? state.setupCount : state.payloadCount;
+    const label = `${isSetup ? 'Setup' : 'Payload'} ${typeIndex}/${typeTotal}`;
+    
+    html += `
+      <div class="preview-item ${type}">
+        <div class="preview-item-header">
+          <span class="preview-item-label">${label}</span>
+        </div>
+        <canvas data-index="${i}"></canvas>
+      </div>
+    `;
+  }
+  
+  previewList.innerHTML = html;
+  
+  // Render each barcode to its canvas
+  const canvases = previewList.querySelectorAll('canvas');
+  for (const canvas of canvases) {
+    const index = parseInt((canvas as HTMLCanvasElement).dataset.index!, 10);
+    try {
+      await renderToCanvas(canvas as HTMLCanvasElement, {
+        symbology,
+        data: barcodes[index],
+        scale: 2,
+        ...BWIPPoptions,
+      });
+    } catch (e) {
+      console.error(`Failed to render preview barcode ${index}:`, e);
+    }
+  }
+}
+
+// ============================================
+// Editor Actions
+// ============================================
+
 $('#saveBtn')?.addEventListener('click', () => {
   if (!state.currentPayload) return;
   
@@ -312,33 +389,32 @@ $('#saveBtn')?.addEventListener('click', () => {
     const payload = JSON.parse(content) as Payload;
     payload.name = payloadNameInput.value || payload.name;
     
-    // Check if it's a preset (fork it) or existing user payload (update it)
+    // Fork preset or update existing
     if (presets[state.currentPayloadId!]) {
       const stored = createPayload(payload);
       state.currentPayloadId = stored.id;
       state.isPreset = false;
+      payloadNameInput.readOnly = false;
     } else if (state.currentPayloadId) {
       updatePayload(state.currentPayloadId, payload);
     } else {
       const stored = createPayload(payload);
       state.currentPayloadId = stored.id;
       state.isPreset = false;
+      payloadNameInput.readOnly = false;
     }
     
     state.currentPayload = payload;
     state.editorDirty = false;
     
-    // Update title
-    payloadTitle.textContent = payload.name;
-    
     renderPayloadList();
-    editorStatus.textContent = '✓ Saved';
-    editorStatus.className = 'editor-status success';
+    updateStatusBar('✓ Saved', false);
   } catch (e) {
-    editorStatus.textContent = `✗ ${(e as Error).message}`;
-    editorStatus.className = 'editor-status error';
+    updateStatusBar(`✗ ${(e as Error).message}`, true);
   }
 });
+
+$('#validateBtn')?.addEventListener('click', validateAndPreview);
 
 $('#newPayloadBtn')?.addEventListener('click', () => {
   state.currentPayloadId = null;
@@ -349,17 +425,12 @@ $('#newPayloadBtn')?.addEventListener('click', () => {
     payload: [],
   };
   
-  // Show payload view
-  emptyState.classList.add('hidden');
-  payloadView.classList.remove('hidden');
-  
-  // Update header
-  payloadTitle.textContent = 'New Payload';
-  
-  // Expand editor for new payloads
-  editorSection.classList.add('expanded');
+  showView('editor');
   
   payloadNameInput.value = 'New Payload';
+  payloadNameInput.readOnly = false;
+  payloadDescription.textContent = '';
+  
   if (editor) {
     const content = JSON.stringify(state.currentPayload, null, 2);
     editor.dispatch({
@@ -368,17 +439,27 @@ $('#newPayloadBtn')?.addEventListener('click', () => {
   }
   
   updateBarcodeData();
+  renderPreview();
   renderPayloadList();
   
   // Close mobile sidebar
   if (window.innerWidth <= 768) {
-    sidebar.classList.remove('open');
+    sidebarLeft.classList.remove('open');
   }
 });
 
-$('#validateBtn')?.addEventListener('click', validateAndPreview);
+// Name input editing
+payloadNameInput.addEventListener('input', () => {
+  if (!state.isPreset && state.currentPayload) {
+    state.currentPayload.name = payloadNameInput.value;
+    state.editorDirty = true;
+  }
+});
 
+// ============================================
 // Import/Export
+// ============================================
+
 $('#importBtn')?.addEventListener('click', () => {
   importTextarea.value = '';
   importModal.showModal();
@@ -421,7 +502,7 @@ $('#exportBtn')?.addEventListener('click', () => {
 });
 
 // ============================================
-// Runner Section
+// Runner
 // ============================================
 
 function initRunner() {
@@ -434,6 +515,7 @@ function initRunner() {
   modelSelect.addEventListener('change', () => {
     state.settings = saveSettings({ modelId: modelSelect.value });
     updateBarcodeData();
+    renderPreview();
   });
   
   // Display mode buttons
@@ -455,13 +537,6 @@ function initRunner() {
   startDelaySelect.addEventListener('change', () => {
     state.settings = saveSettings({ startDelay: parseInt(startDelaySelect.value) });
   });
-  
-  // Fullscreen on click
-  barcodeContainer.addEventListener('click', () => {
-    if (state.barcodeData && state.barcodeData.barcodes.length > 0 && !state.isRunning) {
-      barcodeContainer.requestFullscreen?.();
-    }
-  });
 }
 
 function updateRunnerUI() {
@@ -473,41 +548,68 @@ function updateRunnerUI() {
     (el as HTMLElement).style.display = showFor === mode ? '' : 'none';
   });
   
-  // Update nav button visibility based on mode and running state
-  if (mode === 'manual' && state.isRunning) {
-    prevBtn.classList.remove('hidden');
-    nextBtn.classList.remove('hidden');
-  } else {
-    prevBtn.classList.add('hidden');
-    nextBtn.classList.add('hidden');
+  // Update nav visibility
+  const showNav = mode === 'manual';
+  prevBtn.classList.toggle('hidden', !showNav);
+  nextBtn.classList.toggle('hidden', !showNav);
+  
+  // Update progress
+  if (state.barcodeData) {
+    const total = state.barcodeData.barcodes.length;
+    progressText.textContent = `0 / ${total}`;
+    progressFill.style.width = '0%';
   }
 }
 
-function startRun() {
+$('#runBtn')?.addEventListener('click', () => {
   if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
     alert('No barcodes to display. Select a payload first.');
     return;
   }
+  showView('runner');
+  state.currentBarcodeIndex = 0;
+  updateRunnerUI();
+});
+
+$('#backToEditorBtn')?.addEventListener('click', () => {
+  stopRun();
+  showView('editor');
+});
+
+startBtn.addEventListener('click', startRun);
+stopBtn.addEventListener('click', stopRun);
+
+prevBtn.addEventListener('click', () => {
+  if (state.currentBarcodeIndex > 0) {
+    state.currentBarcodeIndex--;
+    renderCurrentBarcode();
+  }
+});
+
+nextBtn.addEventListener('click', () => {
+  if (state.barcodeData && state.currentBarcodeIndex < state.barcodeData.barcodes.length - 1) {
+    state.currentBarcodeIndex++;
+    renderCurrentBarcode();
+  }
+});
+
+function startRun() {
+  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) return;
   
   state.isRunning = true;
   state.currentBarcodeIndex = 0;
   
-  runBtn.classList.add('hidden');
+  startBtn.classList.add('hidden');
   stopBtn.classList.remove('hidden');
-  barcodePlaceholder.classList.add('hidden');
-  
-  updateRunnerUI();
   
   const mode = state.settings.displayMode;
   
   if (mode === 'auto') {
-    // Start delay
     const delay = state.settings.startDelay * 1000;
     setTimeout(() => {
       if (!state.isRunning) return;
       renderCurrentBarcode();
       
-      // Start auto-advance
       const intervalMs = 1000 / state.settings.autoRate;
       state.runInterval = window.setInterval(() => {
         state.currentBarcodeIndex++;
@@ -520,8 +622,6 @@ function startRun() {
     }, delay);
   } else if (mode === 'manual') {
     renderCurrentBarcode();
-  } else if (mode === 'list') {
-    renderAllBarcodes();
   }
 }
 
@@ -533,10 +633,8 @@ function stopRun() {
     state.runInterval = null;
   }
   
-  runBtn.classList.remove('hidden');
+  startBtn.classList.remove('hidden');
   stopBtn.classList.add('hidden');
-  prevBtn.classList.add('hidden');
-  nextBtn.classList.add('hidden');
 }
 
 function renderCurrentBarcode() {
@@ -549,6 +647,12 @@ function renderCurrentBarcode() {
   // Update progress
   progressFill.style.width = `${((index + 1) / total) * 100}%`;
   progressText.textContent = `${index + 1} / ${total}`;
+  
+  // Update label
+  const isSetup = index < state.setupCount;
+  const typeIndex = isSetup ? index + 1 : index - state.setupCount + 1;
+  const typeTotal = isSetup ? state.setupCount : state.payloadCount;
+  barcodeLabel.textContent = `${isSetup ? 'Setup' : 'Payload'} ${typeIndex}/${typeTotal}`;
   
   // Render barcode
   renderToCanvas(barcodeCanvas, {
@@ -565,32 +669,18 @@ function renderCurrentBarcode() {
   nextBtn.disabled = index === total - 1;
 }
 
-function renderAllBarcodes() {
-  // TODO: Implement list mode - render all barcodes for printing
-  alert('List mode coming soon!');
-  stopRun();
-}
-
-runBtn.addEventListener('click', startRun);
-stopBtn.addEventListener('click', stopRun);
-prevBtn.addEventListener('click', () => {
-  if (state.currentBarcodeIndex > 0) {
-    state.currentBarcodeIndex--;
-    renderCurrentBarcode();
-  }
-});
-nextBtn.addEventListener('click', () => {
-  if (state.barcodeData && state.currentBarcodeIndex < state.barcodeData.barcodes.length - 1) {
-    state.currentBarcodeIndex++;
-    renderCurrentBarcode();
+// Fullscreen on click
+barcodeContainer.addEventListener('click', () => {
+  if (state.barcodeData && state.barcodeData.barcodes.length > 0) {
+    barcodeContainer.requestFullscreen?.();
   }
 });
 
 // ============================================
-// Share Section
+// Share
 // ============================================
 
-$('#generateShareBtn')?.addEventListener('click', async () => {
+$('#shareBtn')?.addEventListener('click', async () => {
   if (!state.currentPayload) {
     alert('Select a payload first');
     return;
@@ -599,19 +689,34 @@ $('#generateShareBtn')?.addEventListener('click', async () => {
   const url = generateShareUrl(state.currentPayload, state.settings);
   shareUrl.value = url;
   
-  // Render QR code locally using bwip-js
+  // Render QR code
   try {
     await renderShareQrCode(shareQrCanvas, url);
-    shareQrPlaceholder.classList.add('hidden');
   } catch (e) {
     console.error('Failed to render QR code:', e);
-    shareQrPlaceholder.textContent = 'Failed to generate QR';
   }
+  
+  shareModal.showModal();
+});
+
+$('#shareCloseBtn')?.addEventListener('click', () => {
+  shareModal.close();
 });
 
 $('#copyUrlBtn')?.addEventListener('click', () => {
   if (shareUrl.value) {
     navigator.clipboard.writeText(shareUrl.value);
+    ($('#copyUrlBtn') as HTMLButtonElement).textContent = 'Copied!';
+    setTimeout(() => {
+      ($('#copyUrlBtn') as HTMLButtonElement).textContent = 'Copy';
+    }, 1500);
+  }
+});
+
+// Close modal on backdrop click
+shareModal.addEventListener('click', (e) => {
+  if (e.target === shareModal) {
+    shareModal.close();
   }
 });
 
@@ -639,9 +744,12 @@ async function init() {
   await initEditor();
   initRunner();
   renderPayloadList();
-  updateRunnerUI();
   
-  // Start with empty state visible (no payload selected)
+  // Default: select "Hello World" preset
+  const defaultPresetId = Object.keys(presets)[0];
+  if (defaultPresetId) {
+    selectPayload(defaultPresetId);
+  }
 }
 
 init().catch(console.error);
