@@ -486,6 +486,11 @@ body {
   color: var(--text-primary);
 }
 
+.toolbar-btn.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
 .toolbar-btn-primary {
   background: var(--accent-primary);
   color: white;
@@ -532,8 +537,15 @@ body {
 }
 
 /* Editor Container (CodeMirror) */
-.editor-container {
+.editor-body {
+  position: relative;
   flex: 1;
+  overflow: hidden;
+}
+
+.editor-container {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
@@ -642,16 +654,20 @@ body {
    ============================================ */
 
 .runner-view {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: var(--space-lg);
+  background: var(--bg-primary);
 }
 
 .runner-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: var(--space-md);
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border-color);
@@ -692,6 +708,22 @@ body {
   padding: var(--space-md);
   background: var(--bg-secondary);
   border-radius: var(--border-radius);
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+}
+
+.mode-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .control-group {
@@ -900,10 +932,12 @@ body {
   background: transparent;
   max-width: none;
   max-height: none;
+  display: none;
+  color: var(--text-primary);
 }
 
 .modal[open] {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
 }
@@ -919,6 +953,7 @@ body {
   padding: var(--space-lg);
   min-width: 380px;
   max-width: 520px;
+  margin: auto;
 }
 
 .modal-header {
@@ -926,6 +961,10 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-md);
+}
+
+.modal-content p {
+  color: var(--text-secondary);
 }
 
 .modal-header h2 {
@@ -955,6 +994,7 @@ body {
 .modal-content h2 {
   margin-bottom: var(--space-md);
   font-size: 20px;
+  color: var(--text-primary);
 }
 
 .modal-content textarea {

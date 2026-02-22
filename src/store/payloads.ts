@@ -302,7 +302,7 @@ export interface Settings {
 
 export const defaultSettings: Settings = {
   modelId: 'symbol',
-  displayMode: 'manual',
+  displayMode: 'auto',
   barcodeType: '2d',
   autoRate: 0.4,
   startDelay: 3,
