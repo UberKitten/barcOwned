@@ -1,7 +1,8 @@
 /**
  * barcOwned v2 Styles
  * 
- * Dark theme, mobile-first, single-page layout with sidebar.
+ * Editor-centric IDE layout with dark theme.
+ * Three-column layout: payload list | code editor | barcode preview
  */
 
 /* ============================================
@@ -41,8 +42,11 @@
   --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
   
   /* Sizing */
-  --nav-height: 56px;
+  --nav-height: 48px;
   --sidebar-width: 260px;
+  --preview-width: 280px;
+  --toolbar-height: 40px;
+  --statusbar-height: 24px;
 }
 
 /* ============================================
@@ -62,7 +66,7 @@ html, body {
 
 body {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--text-primary);
   background: var(--bg-primary);
@@ -98,20 +102,20 @@ body {
 
 .nav-menu-btn {
   display: none;
-  padding: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
   border: none;
   background: transparent;
   color: var(--text-primary);
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
 }
 
 .nav-logo {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .nav-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.5px;
 }
@@ -125,7 +129,7 @@ body {
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   transition: color 0.15s ease;
 }
 
@@ -134,7 +138,7 @@ body {
 }
 
 /* ============================================
-   App Layout (Sidebar + Main)
+   App Layout (3-column IDE)
    ============================================ */
 
 .app-layout {
@@ -144,47 +148,73 @@ body {
 }
 
 /* ============================================
-   Sidebar
+   Sidebars (Left & Right)
    ============================================ */
 
 .sidebar {
   display: flex;
   flex-direction: column;
-  width: var(--sidebar-width);
   background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
+  border-color: var(--border-color);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-left {
+  width: var(--sidebar-width);
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar-right {
+  width: var(--preview-width);
+  border-left: 1px solid var(--border-color);
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--border-color);
+  min-height: 36px;
 }
 
 .sidebar-header h2 {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.sidebar-toggle:hover {
+  color: var(--text-primary);
+}
+
+/* Payload List */
 .payload-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-sm);
+  padding: var(--space-xs);
 }
 
 .payload-section {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .payload-section h4 {
   padding: var(--space-xs) var(--space-sm);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -194,12 +224,12 @@ body {
 .payload-item {
   display: flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--border-radius-sm);
   color: var(--text-primary);
   cursor: pointer;
   transition: background 0.15s ease;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .payload-item:hover {
@@ -216,27 +246,29 @@ body {
 
 .payload-item.preset::before {
   content: '📦';
-  margin-right: var(--space-sm);
-  font-size: 12px;
+  margin-right: var(--space-xs);
+  font-size: 10px;
 }
 
 .sidebar-footer {
   display: flex;
-  gap: var(--space-sm);
-  padding: var(--space-md);
+  gap: var(--space-xs);
+  padding: var(--space-sm);
   border-top: 1px solid var(--border-color);
   flex-wrap: wrap;
 }
 
 /* ============================================
-   Main Content Area
+   Main Content Area (Editor View)
    ============================================ */
 
 .main-content {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--bg-primary);
+  min-width: 0;
 }
 
 /* Empty State */
@@ -252,186 +284,292 @@ body {
 }
 
 .empty-state-icon {
-  font-size: 64px;
+  font-size: 48px;
   margin-bottom: var(--space-lg);
   opacity: 0.3;
 }
 
 .empty-state h2 {
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: var(--space-sm);
   color: var(--text-primary);
 }
 
-/* Payload View */
-.payload-view {
-  padding: var(--space-lg);
-  max-width: 1000px;
-  margin: 0 auto;
+.empty-state p {
+  font-size: 14px;
 }
 
-.payload-header {
+/* Editor View */
+.editor-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Editor Header */
+.editor-header {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.editor-title-row {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--border-color);
 }
 
-.payload-title {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.payload-badge {
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--bg-tertiary);
-  border-radius: var(--border-radius-sm);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* ============================================
-   Sections (Editor, Runner, Share)
-   ============================================ */
-
-.section {
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius);
-  margin-bottom: var(--space-lg);
-  overflow: hidden;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--bg-tertiary);
+.editor-title-input {
+  flex: 1;
+  background: transparent;
   border: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
   color: var(--text-primary);
-  font-family: inherit;
-}
-
-.section-header.static {
-  cursor: default;
-}
-
-.section-header h2 {
   font-size: 16px;
   font-weight: 600;
-  flex: 1;
+  padding: var(--space-xs) 0;
+  outline: none;
 }
 
-.section-chevron {
-  font-size: 12px;
-  transition: transform 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.section.expanded .section-chevron {
-  transform: rotate(90deg);
-}
-
-.section-badge {
+.editor-title-input:not([readonly]) {
+  background: var(--bg-primary);
   padding: var(--space-xs) var(--space-sm);
-  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+.editor-title-input:focus:not([readonly]) {
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+.editor-badge {
+  padding: 2px var(--space-sm);
+  background: var(--bg-tertiary);
   border-radius: var(--border-radius-sm);
   font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.editor-description {
+  margin-top: var(--space-xs);
+  font-size: 12px;
   color: var(--text-muted);
 }
 
-.section-content {
-  padding: var(--space-md);
-}
-
-/* Collapsed state */
-.section-editor:not(.expanded) .section-content {
+.editor-description:empty {
   display: none;
 }
 
-/* ============================================
-   Editor Section
-   ============================================ */
-
-.editor-row {
+/* Editor Toolbar */
+.editor-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  height: var(--toolbar-height);
 }
 
-.payload-name-input {
-  flex: 1;
-  padding: var(--space-sm) var(--space-md);
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color);
+  margin: 0 var(--space-xs);
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toolbar-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.toolbar-btn-primary {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.toolbar-btn-primary:hover {
+  background: var(--accent-primary-hover);
+  color: white;
+}
+
+.toolbar-icon {
+  font-size: 14px;
+}
+
+.toolbar-label {
+  font-size: 12px;
+}
+
+.toolbar-select {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
 }
 
-.payload-name-input:focus {
+.toolbar-select:focus {
   outline: none;
   border-color: var(--accent-primary);
 }
 
-.editor-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
-
+/* Editor Container (CodeMirror) */
 .editor-container {
-  height: 300px;
-  border-radius: var(--border-radius-sm);
+  flex: 1;
   overflow: hidden;
-  border: 1px solid var(--border-color);
 }
 
 .editor-container .cm-editor {
   height: 100%;
 }
 
-.editor-status {
-  margin-top: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-primary);
-  border-radius: var(--border-radius-sm);
+.editor-container .cm-scroller {
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 13px;
 }
 
-.editor-status.error {
-  color: var(--accent-danger);
+/* Status Bar */
+.editor-statusbar {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-md);
+  height: var(--statusbar-height);
+  background: var(--accent-primary);
+  font-size: 11px;
+  color: white;
 }
 
-.editor-status.success {
-  color: var(--accent-success);
+.status-validation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.status-validation.error {
+  color: #fecaca;
+}
+
+.status-spacer {
+  flex: 1;
+}
+
+.status-position {
+  font-family: var(--font-mono);
 }
 
 /* ============================================
-   Runner Section
+   Barcode Preview Sidebar
    ============================================ */
 
-.runner-controls {
-  margin-bottom: var(--space-lg);
+.preview-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-sm);
 }
 
-.control-row {
+.preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: var(--space-md);
+}
+
+.preview-item {
+  margin-bottom: var(--space-sm);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  background: white;
+}
+
+.preview-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-tertiary);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.preview-item-label {
+  font-weight: 600;
+}
+
+.preview-item.setup .preview-item-header {
+  border-left: 3px solid var(--accent-warning);
+}
+
+.preview-item.payload .preview-item-header {
+  border-left: 3px solid var(--accent-success);
+}
+
+.preview-item canvas {
+  display: block;
+  width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  padding: var(--space-sm);
+}
+
+/* ============================================
+   Runner View
+   ============================================ */
+
+.runner-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-lg);
+}
+
+.runner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.runner-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.runner-controls {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-lg);
-  margin-bottom: var(--space-md);
-}
-
-.control-row:last-child {
-  margin-bottom: 0;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
 }
 
 .control-group {
@@ -441,18 +579,20 @@ body {
 }
 
 .control-group label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Barcode Display Area */
-.barcode-area {
+/* Barcode Display */
+.barcode-display {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--space-lg);
 }
 
@@ -464,25 +604,21 @@ body {
   min-width: 300px;
   min-height: 200px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.barcode-container:hover {
-  transform: scale(1.02);
+  gap: var(--space-sm);
 }
 
 #barcodeCanvas {
   max-width: 100%;
-  max-height: 50vh;
+  max-height: 40vh;
 }
 
-.barcode-placeholder {
+.barcode-label {
+  font-size: 12px;
   color: #666;
-  font-size: 16px;
-  text-align: center;
+  font-weight: 500;
 }
 
 .runner-progress {
@@ -522,86 +658,6 @@ body {
   gap: var(--space-md);
 }
 
-.runner-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-/* ============================================
-   Share Section
-   ============================================ */
-
-.share-row {
-  display: flex;
-  gap: var(--space-xl);
-  align-items: flex-start;
-}
-
-.share-qr {
-  position: relative;
-  background: white;
-  border-radius: var(--border-radius);
-  padding: var(--space-md);
-  flex-shrink: 0;
-}
-
-.share-qr canvas {
-  display: block;
-  width: 200px;
-  height: 200px;
-}
-
-.share-qr-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 13px;
-  text-align: center;
-  padding: var(--space-md);
-  background: white;
-  border-radius: var(--border-radius);
-}
-
-.share-qr-placeholder.hidden {
-  display: none;
-}
-
-.share-actions {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.share-description {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.share-url-row {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.share-url-row input {
-  flex: 1;
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.share-url-row input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-}
-
 /* ============================================
    Buttons
    ============================================ */
@@ -616,7 +672,7 @@ body {
   border-radius: var(--border-radius-sm);
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -633,12 +689,12 @@ body {
 
 .btn-sm {
   padding: var(--space-xs) var(--space-sm);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .btn-lg {
   padding: var(--space-md) var(--space-lg);
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .btn-primary {
@@ -692,7 +748,7 @@ body {
   border-radius: var(--border-radius-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
 }
 
@@ -702,7 +758,7 @@ body {
 }
 
 /* ============================================
-   Modal
+   Modals
    ============================================ */
 
 .modal {
@@ -729,12 +785,33 @@ body {
   background: var(--bg-secondary);
   border-radius: var(--border-radius);
   padding: var(--space-lg);
-  min-width: 400px;
-  max-width: 600px;
+  min-width: 360px;
+  max-width: 500px;
 }
 
-.modal-content h2 {
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: var(--space-md);
+}
+
+.modal-header h2 {
+  font-size: 18px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
 }
 
 .modal-content textarea {
@@ -746,7 +823,7 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   resize: vertical;
 }
 
@@ -755,6 +832,47 @@ body {
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: var(--space-md);
+}
+
+/* Share Modal */
+.share-qr-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.share-qr-container canvas {
+  background: white;
+  border-radius: var(--border-radius-sm);
+  padding: var(--space-sm);
+}
+
+.share-description {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: var(--space-md);
+}
+
+.share-url-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.share-url-row input {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.share-url-row input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
 }
 
 /* ============================================
@@ -769,6 +887,13 @@ body {
    Mobile Responsiveness
    ============================================ */
 
+@media (max-width: 1024px) {
+  /* Hide right sidebar on tablets */
+  .sidebar-right {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .nav-menu-btn {
     display: block;
@@ -778,7 +903,7 @@ body {
     display: none;
   }
   
-  .sidebar {
+  .sidebar-left {
     position: fixed;
     top: var(--nav-height);
     left: 0;
@@ -788,35 +913,30 @@ body {
     transition: transform 0.3s ease;
   }
   
-  .sidebar.open {
+  .sidebar-left.open {
     transform: translateX(0);
   }
   
-  .payload-view {
-    padding: var(--space-md);
-  }
-  
-  .payload-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .control-row {
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-  
-  .share-row {
-    flex-direction: column;
-  }
-  
-  .share-qr {
-    align-self: center;
-  }
-  
-  /* Editor always collapsed on mobile */
-  .section-editor .section-content {
+  .sidebar-right {
     display: none;
+  }
+  
+  .editor-toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: var(--space-sm);
+  }
+  
+  .toolbar-label {
+    display: none;
+  }
+  
+  .editor-title-row {
+    flex-wrap: wrap;
+  }
+  
+  .runner-controls {
+    flex-direction: column;
   }
   
   .runner-nav {
@@ -826,22 +946,19 @@ body {
 }
 
 /* ============================================
-   Fullscreen barcode
+   Fullscreen barcode (for running)
    ============================================ */
 
 .barcode-container:fullscreen {
   background: white;
   padding: var(--space-xl);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
 .barcode-container:fullscreen #barcodeCanvas {
   max-width: 90vw;
-  max-height: 90vh;
-}
-
-.barcode-container:fullscreen .barcode-placeholder {
-  display: none;
+  max-height: 80vh;
 }
