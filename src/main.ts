@@ -22,6 +22,23 @@ import {
   renderShareQrCode,
 } from './store';
 import type { Settings } from './store';
+import {
+  iconMenu,
+  iconScanBarcode,
+  iconSave,
+  iconPlay,
+  iconSquare,
+  iconShare,
+  iconChevronLeft,
+  iconChevronRight,
+  iconPackage,
+  iconPlus,
+  iconImport,
+  iconExport,
+  iconCopy,
+  iconArrowLeft,
+  iconX,
+} from './icons';
 
 // ============================================
 // State
@@ -95,6 +112,7 @@ const previewList = $<HTMLDivElement>('#previewList')!;
 
 // Runner
 const runnerTitle = $<HTMLElement>('#runnerTitle')!;
+const runnerMessage = $<HTMLDivElement>('#runnerMessage')!;
 const displayModeGroup = $<HTMLDivElement>('#displayModeGroup')!;
 const autoRateSelect = $<HTMLSelectElement>('#autoRate')!;
 const startDelaySelect = $<HTMLSelectElement>('#startDelay')!;
@@ -114,6 +132,32 @@ const shareQrCanvas = $<HTMLCanvasElement>('#shareQrCanvas')!;
 const shareUrl = $<HTMLInputElement>('#shareUrl')!;
 const importModal = $<HTMLDialogElement>('#importModal')!;
 const importTextarea = $<HTMLTextAreaElement>('#importTextarea')!;
+const importError = $<HTMLDivElement>('#importError')!;
+const exportBtn = $<HTMLButtonElement>('#exportBtn')!;
+
+// ============================================
+// Inline Feedback Utilities
+// ============================================
+
+function showImportError(message: string) {
+  importError.textContent = message;
+  importError.classList.remove('hidden');
+}
+
+function hideImportError() {
+  importError.textContent = '';
+  importError.classList.add('hidden');
+}
+
+function showRunnerMessage(message: string, isError = false) {
+  runnerMessage.textContent = message;
+  runnerMessage.classList.toggle('error', isError);
+  runnerMessage.classList.remove('hidden');
+}
+
+function hideRunnerMessage() {
+  runnerMessage.classList.add('hidden');
+}
 
 // ============================================
 // Mobile Menu Toggle
@@ -143,7 +187,10 @@ function renderPayloadList() {
   let html = '<div class="payload-section"><h4>Presets</h4>';
   for (const [id, payload] of Object.entries(presets)) {
     const active = state.currentPayloadId === id ? 'active' : '';
-    html += `<div class="payload-item preset ${active}" data-id="${id}">${payload.name}</div>`;
+    html += `<div class="payload-item preset ${active}" data-id="${id}">
+      <span class="payload-item-icon">${iconPackage}</span>
+      <span class="payload-item-name">${payload.name}</span>
+    </div>`;
   }
   html += '</div>';
   
@@ -151,7 +198,9 @@ function renderPayloadList() {
     html += '<div class="payload-section"><h4>My Payloads</h4>';
     for (const stored of userPayloads) {
       const active = state.currentPayloadId === stored.id ? 'active' : '';
-      html += `<div class="payload-item ${active}" data-id="${stored.id}">${stored.payload.name}</div>`;
+      html += `<div class="payload-item ${active}" data-id="${stored.id}">
+        <span class="payload-item-name">${stored.payload.name}</span>
+      </div>`;
     }
     html += '</div>';
   }
@@ -168,6 +217,15 @@ function renderPayloadList() {
       }
     });
   });
+  
+  // Update export button state
+  updateExportButtonState();
+}
+
+function updateExportButtonState() {
+  const userPayloads = loadPayloads();
+  exportBtn.disabled = userPayloads.length === 0;
+  exportBtn.title = userPayloads.length === 0 ? 'No user payloads to export' : 'Export payloads';
 }
 
 function selectPayload(id: string) {
@@ -225,6 +283,7 @@ function showView(view: 'editor' | 'runner') {
   
   if (view === 'runner') {
     runnerTitle.textContent = `Running: ${state.currentPayload?.name || 'Payload'}`;
+    hideRunnerMessage();
     updateRunnerUI();
   }
 }
@@ -240,6 +299,7 @@ async function initEditor() {
   const { json } = await import('@codemirror/lang-json');
   const { oneDark } = await import('@codemirror/theme-one-dark');
   const { defaultKeymap, history, historyKeymap } = await import('@codemirror/commands');
+  const { lintGutter, setDiagnostics } = await import('@codemirror/lint');
   
   const startState = EditorState.create({
     doc: '{\n  "name": "New Payload",\n  "payload": []\n}',
@@ -247,6 +307,7 @@ async function initEditor() {
       lineNumbers(),
       highlightActiveLine(),
       history(),
+      lintGutter(),
       keymap.of([...defaultKeymap, ...historyKeymap]),
       json(),
       oneDark,
@@ -267,6 +328,9 @@ async function initEditor() {
     state: startState,
     parent: editorContainer,
   });
+  
+  // Store setDiagnostics for later use
+  (editor as any)._setDiagnostics = setDiagnostics;
 }
 
 function validateAndPreview() {
@@ -283,16 +347,102 @@ function validateAndPreview() {
     state.currentPayload = payload;
     updateStatusBar('✓ Valid JSON', false);
     
+    // Clear any error diagnostics
+    clearEditorErrors();
+    
     updateBarcodeData();
     renderPreview();
   } catch (e) {
-    updateStatusBar(`✗ ${(e as Error).message}`, true);
+    const error = e as Error;
+    updateStatusBar(`✗ ${error.message}`, true);
+    
+    // Try to highlight error location
+    highlightErrorLocation(error);
   }
+}
+
+function clearEditorErrors() {
+  if (editor && (editor as any)._setDiagnostics) {
+    const setDiagnostics = (editor as any)._setDiagnostics;
+    editor.dispatch({
+      effects: setDiagnostics(editor.state, [])
+    });
+  }
+}
+
+function highlightErrorLocation(error: Error) {
+  if (!editor || !(editor as any)._setDiagnostics) return;
+  
+  const setDiagnostics = (editor as any)._setDiagnostics;
+  const message = error.message;
+  
+  // Try to parse error position from JSON.parse error messages
+  // Format varies by browser:
+  // Chrome: "Unexpected token } in JSON at position 42"
+  // Firefox: "JSON.parse: expected ',' or '}' after property value in object at line 3 column 5"
+  // Safari: "JSON Parse error: Expected '}'"
+  
+  let pos = 0;
+  let line = 1;
+  let col = 1;
+  
+  // Try Chrome/V8 format: "at position N"
+  const posMatch = message.match(/at position (\d+)/i);
+  if (posMatch) {
+    pos = parseInt(posMatch[1], 10);
+  }
+  
+  // Try Firefox format: "at line N column M"
+  const lineColMatch = message.match(/at line (\d+) column (\d+)/i);
+  if (lineColMatch) {
+    line = parseInt(lineColMatch[1], 10);
+    col = parseInt(lineColMatch[2], 10);
+    // Convert line/col to position
+    const docText = editor.state.doc.toString();
+    const lines = docText.split('\n');
+    pos = 0;
+    for (let i = 0; i < line - 1 && i < lines.length; i++) {
+      pos += lines[i].length + 1; // +1 for newline
+    }
+    pos += col - 1;
+  }
+  
+  // Clamp position to document length
+  const docLength = editor.state.doc.length;
+  pos = Math.min(pos, docLength);
+  
+  // Create diagnostic
+  const diagnostic = {
+    from: pos,
+    to: Math.min(pos + 1, docLength),
+    severity: 'error' as const,
+    message: error.message,
+  };
+  
+  editor.dispatch({
+    effects: setDiagnostics(editor.state, [diagnostic])
+  });
+  
+  // Make status bar clickable to jump to error
+  statusValidation.style.cursor = 'pointer';
+  statusValidation.onclick = () => {
+    editor.dispatch({
+      selection: { anchor: pos },
+      scrollIntoView: true,
+    });
+    editor.focus();
+  };
 }
 
 function updateStatusBar(message: string, isError = false) {
   statusValidation.textContent = message;
   statusValidation.classList.toggle('error', isError);
+  
+  // Remove click handler if not error
+  if (!isError) {
+    statusValidation.style.cursor = '';
+    statusValidation.onclick = null;
+  }
 }
 
 function updateBarcodeData() {
@@ -414,8 +564,6 @@ $('#saveBtn')?.addEventListener('click', () => {
   }
 });
 
-$('#validateBtn')?.addEventListener('click', validateAndPreview);
-
 $('#newPayloadBtn')?.addEventListener('click', () => {
   state.currentPayloadId = null;
   state.isPreset = false;
@@ -462,6 +610,7 @@ payloadNameInput.addEventListener('input', () => {
 
 $('#importBtn')?.addEventListener('click', () => {
   importTextarea.value = '';
+  hideImportError();
   importModal.showModal();
 });
 
@@ -478,14 +627,14 @@ $('#importConfirmBtn')?.addEventListener('click', () => {
       selectPayload(imported[0].id);
     }
   } catch (e) {
-    alert(`Import failed: ${(e as Error).message}`);
+    showImportError(`Import failed: ${(e as Error).message}`);
   }
 });
 
-$('#exportBtn')?.addEventListener('click', () => {
+exportBtn?.addEventListener('click', () => {
   const userPayloads = loadPayloads();
   if (userPayloads.length === 0) {
-    alert('No user payloads to export');
+    // Button should be disabled, but just in case
     return;
   }
   
@@ -563,7 +712,8 @@ function updateRunnerUI() {
 
 $('#runBtn')?.addEventListener('click', () => {
   if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
-    alert('No barcodes to display. Select a payload first.');
+    showRunnerMessage('No barcodes to display. Select a payload first.', true);
+    showView('runner');
     return;
   }
   showView('runner');
@@ -594,8 +744,12 @@ nextBtn.addEventListener('click', () => {
 });
 
 function startRun() {
-  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) return;
+  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
+    showRunnerMessage('No barcodes to display.', true);
+    return;
+  }
   
+  hideRunnerMessage();
   state.isRunning = true;
   state.currentBarcodeIndex = 0;
   
@@ -682,7 +836,7 @@ barcodeContainer.addEventListener('click', () => {
 
 $('#shareBtn')?.addEventListener('click', async () => {
   if (!state.currentPayload) {
-    alert('Select a payload first');
+    // This shouldn't happen since share button is in editor view
     return;
   }
   
@@ -706,9 +860,11 @@ $('#shareCloseBtn')?.addEventListener('click', () => {
 $('#copyUrlBtn')?.addEventListener('click', () => {
   if (shareUrl.value) {
     navigator.clipboard.writeText(shareUrl.value);
-    ($('#copyUrlBtn') as HTMLButtonElement).textContent = 'Copied!';
+    const copyBtn = $('#copyUrlBtn') as HTMLButtonElement;
+    const originalContent = copyBtn.innerHTML;
+    copyBtn.innerHTML = `${iconCopy} Copied!`;
     setTimeout(() => {
-      ($('#copyUrlBtn') as HTMLButtonElement).textContent = 'Copy';
+      copyBtn.innerHTML = originalContent;
     }, 1500);
   }
 });
@@ -721,10 +877,73 @@ shareModal.addEventListener('click', (e) => {
 });
 
 // ============================================
+// Initialize Icons in DOM
+// ============================================
+
+function initIcons() {
+  // Nav
+  const menuToggleEl = $('#menuToggle');
+  if (menuToggleEl) menuToggleEl.innerHTML = iconMenu;
+  
+  const navLogo = $('.nav-logo');
+  if (navLogo) navLogo.innerHTML = iconScanBarcode;
+  
+  // Toolbar
+  const saveIcon = $('#saveBtn .toolbar-icon');
+  if (saveIcon) saveIcon.innerHTML = iconSave;
+  
+  const runIcon = $('#runBtn .toolbar-icon');
+  if (runIcon) runIcon.innerHTML = iconPlay;
+  
+  const shareIcon = $('#shareBtn .toolbar-icon');
+  if (shareIcon) shareIcon.innerHTML = iconShare;
+  
+  // Sidebar footer
+  const newBtn = $('#newPayloadBtn');
+  if (newBtn) newBtn.innerHTML = `${iconPlus} New`;
+  
+  const importBtn = $('#importBtn');
+  if (importBtn) importBtn.innerHTML = `${iconImport} Import`;
+  
+  const exportBtnEl = $('#exportBtn');
+  if (exportBtnEl) exportBtnEl.innerHTML = `${iconExport} Export`;
+  
+  // Runner
+  const backBtn = $('#backToEditorBtn');
+  if (backBtn) backBtn.innerHTML = `${iconArrowLeft} Back to Editor`;
+  
+  const prevBtnEl = $('#prevBtn');
+  if (prevBtnEl) prevBtnEl.innerHTML = `${iconChevronLeft} Prev`;
+  
+  const nextBtnEl = $('#nextBtn');
+  if (nextBtnEl) nextBtnEl.innerHTML = `Next ${iconChevronRight}`;
+  
+  const startBtnEl = $('#startBtn');
+  if (startBtnEl) startBtnEl.innerHTML = `${iconPlay} Start`;
+  
+  const stopBtnEl = $('#stopBtn');
+  if (stopBtnEl) stopBtnEl.innerHTML = `${iconSquare} Stop`;
+  
+  // Modals
+  const shareCloseBtn = $('#shareCloseBtn');
+  if (shareCloseBtn) shareCloseBtn.innerHTML = iconX;
+  
+  const copyUrlBtn = $('#copyUrlBtn');
+  if (copyUrlBtn) copyUrlBtn.innerHTML = `${iconCopy} Copy`;
+  
+  // Preview toggle
+  const previewToggle = $('#previewToggle');
+  if (previewToggle) previewToggle.innerHTML = iconX;
+}
+
+// ============================================
 // Initialization
 // ============================================
 
 async function init() {
+  // Initialize icons first
+  initIcons();
+  
   // Check for shared payload in URL
   const shared = loadFromUrl();
   if (shared) {

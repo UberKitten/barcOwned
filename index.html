@@ -47,7 +47,7 @@
         <div class="sidebar-footer">
           <button class="btn btn-sm btn-primary" id="newPayloadBtn">+ New</button>
           <button class="btn btn-sm btn-ghost" id="importBtn">Import</button>
-          <button class="btn btn-sm btn-ghost" id="exportBtn">Export</button>
+          <button class="btn btn-sm btn-ghost" id="exportBtn" disabled>Export</button>
         </div>
       </aside>
 
@@ -77,10 +77,6 @@
               <button class="toolbar-btn" id="saveBtn" title="Save payload">
                 <span class="toolbar-icon">💾</span>
                 <span class="toolbar-label">Save</span>
-              </button>
-              <button class="toolbar-btn" id="validateBtn" title="Validate JSON">
-                <span class="toolbar-icon">✓</span>
-                <span class="toolbar-label">Validate</span>
               </button>
             </div>
             
@@ -125,6 +121,9 @@
             <h2 id="runnerTitle">Running: Payload Name</h2>
             <button class="btn btn-ghost" id="backToEditorBtn">← Back to Editor</button>
           </header>
+          
+          <!-- Inline message area for runner -->
+          <div class="runner-message hidden" id="runnerMessage"></div>
 
           <!-- Runner Controls -->
           <div class="runner-controls">
@@ -231,6 +230,7 @@
     <div class="modal-content">
       <h2>Import Payload</h2>
       <textarea id="importTextarea" placeholder="Paste payload JSON here..."></textarea>
+      <div class="import-error hidden" id="importError"></div>
       <div class="modal-actions">
         <button class="btn btn-ghost" id="importCancelBtn">Cancel</button>
         <button class="btn btn-primary" id="importConfirmBtn">Import</button>
