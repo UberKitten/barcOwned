@@ -29,5 +29,5 @@ export {
   hasSharedPayload,
   loadFromUrl,
   clearUrlHash,
-  generateQrCodeUrl,
+  renderShareQrCode,
 } from './share';
