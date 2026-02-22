@@ -1,7 +1,7 @@
 /**
  * barcOwned v2 Main Entry Point
  * 
- * Initializes the app, wires up event handlers, and manages state.
+ * Single-page layout with sidebar navigation.
  */
 
 import './style.css';
@@ -19,7 +19,7 @@ import {
   loadFromUrl,
   clearUrlHash,
   generateShareUrl,
-  generateQrCodeUrl,
+  renderShareQrCode,
 } from './store';
 import type { Settings } from './store';
 
@@ -36,6 +36,7 @@ interface AppState {
   runInterval: number | null;
   settings: Settings;
   editorDirty: boolean;
+  isPreset: boolean;
 }
 
 const state: AppState = {
@@ -47,6 +48,7 @@ const state: AppState = {
   runInterval: null,
   settings: loadSettings(),
   editorDirty: false,
+  isPreset: false,
 };
 
 // CodeMirror editor instance (loaded dynamically)
@@ -59,22 +61,28 @@ let editor: any = null;
 const $ = <T extends HTMLElement>(selector: string): T | null => 
   document.querySelector(selector);
 
-const $$ = <T extends HTMLElement>(selector: string): T[] => 
-  Array.from(document.querySelectorAll(selector));
+// Layout
+const sidebar = $<HTMLElement>('#sidebar')!;
+const menuToggle = $<HTMLButtonElement>('#menuToggle')!;
+const emptyState = $<HTMLDivElement>('#emptyState')!;
+const payloadView = $<HTMLDivElement>('#payloadView')!;
 
-// Navigation
-const navTabs = $$<HTMLButtonElement>('.nav-tab');
-const panels = $$<HTMLElement>('.panel');
-
-// Editor
+// Payload list
 const payloadList = $<HTMLDivElement>('#payloadList')!;
+
+// Payload header
+const payloadTitle = $<HTMLElement>('#payloadTitle')!;
+const payloadBadge = $<HTMLSpanElement>('#payloadBadge')!;
+
+// Editor section
+const editorSection = $<HTMLElement>('#editorSection')!;
+const editorToggle = $<HTMLButtonElement>('#editorToggle')!;
+const editorBadge = $<HTMLSpanElement>('#editorBadge')!;
 const payloadNameInput = $<HTMLInputElement>('#payloadName')!;
 const editorContainer = $<HTMLDivElement>('#editorContainer')!;
 const editorStatus = $<HTMLDivElement>('#editorStatus')!;
-const previewBarcodes = $<HTMLDivElement>('#previewBarcodes')!;
-const previewCount = $<HTMLSpanElement>('#previewCount')!;
 
-// Runner
+// Runner section
 const modelSelect = $<HTMLSelectElement>('#modelSelect')!;
 const displayModeGroup = $<HTMLDivElement>('#displayModeGroup')!;
 const autoRateSelect = $<HTMLSelectElement>('#autoRate')!;
@@ -85,13 +93,13 @@ const barcodeCanvas = $<HTMLCanvasElement>('#barcodeCanvas')!;
 const barcodePlaceholder = $<HTMLDivElement>('#barcodePlaceholder')!;
 const progressFill = $<HTMLDivElement>('#progressFill')!;
 const progressText = $<HTMLSpanElement>('#progressText')!;
-const runnerNav = $<HTMLDivElement>('#runnerNav')!;
 const prevBtn = $<HTMLButtonElement>('#prevBtn')!;
 const nextBtn = $<HTMLButtonElement>('#nextBtn')!;
 const barcodeContainer = $<HTMLDivElement>('#barcodeContainer')!;
 
-// Share
-const shareQrCode = $<HTMLImageElement>('#shareQrCode')!;
+// Share section
+const shareQrCanvas = $<HTMLCanvasElement>('#shareQrCanvas')!;
+const shareQrPlaceholder = $<HTMLDivElement>('#shareQrPlaceholder')!;
 const shareUrl = $<HTMLInputElement>('#shareUrl')!;
 
 // Modals
@@ -99,16 +107,21 @@ const importModal = $<HTMLDialogElement>('#importModal')!;
 const importTextarea = $<HTMLTextAreaElement>('#importTextarea')!;
 
 // ============================================
-// Navigation
+// Mobile Menu Toggle
 // ============================================
 
-function switchTab(tabId: string) {
-  navTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === tabId));
-  panels.forEach(panel => panel.classList.toggle('active', panel.dataset.panel === tabId));
-}
+menuToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+});
 
-navTabs.forEach(tab => {
-  tab.addEventListener('click', () => switchTab(tab.dataset.tab!));
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', (e) => {
+  if (window.innerWidth <= 768 && 
+      sidebar.classList.contains('open') && 
+      !sidebar.contains(e.target as Node) &&
+      e.target !== menuToggle) {
+    sidebar.classList.remove('open');
+  }
 });
 
 // ============================================
@@ -138,7 +151,13 @@ function renderPayloadList() {
   
   // Attach click handlers
   payloadList.querySelectorAll('.payload-item').forEach(item => {
-    item.addEventListener('click', () => selectPayload((item as HTMLElement).dataset.id!));
+    item.addEventListener('click', () => {
+      selectPayload((item as HTMLElement).dataset.id!);
+      // Close mobile sidebar
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+      }
+    });
   });
 }
 
@@ -149,11 +168,20 @@ function selectPayload(id: string) {
   const stored = loadPayloads().find(p => p.id === id);
   if (stored) {
     state.currentPayload = stored.payload;
+    state.isPreset = false;
   } else if (presets[id]) {
     state.currentPayload = presets[id];
+    state.isPreset = true;
   } else {
     return;
   }
+  
+  // Show payload view, hide empty state
+  emptyState.classList.add('hidden');
+  payloadView.classList.remove('hidden');
+  
+  // Update header
+  payloadTitle.textContent = state.currentPayload.name;
   
   // Update editor
   payloadNameInput.value = state.currentPayload.name;
@@ -164,18 +192,34 @@ function selectPayload(id: string) {
     });
   }
   
-  // Update preview
-  updatePreview();
+  // Set editor section collapsed for presets, expanded for user payloads
+  if (state.isPreset) {
+    editorSection.classList.remove('expanded');
+  } else {
+    editorSection.classList.add('expanded');
+  }
+  
+  // Update barcode data
+  updateBarcodeData();
   
   // Re-render list to show selection
   renderPayloadList();
+  
+  // Reset share section
+  shareQrPlaceholder.classList.remove('hidden');
+  shareUrl.value = '';
   
   state.editorDirty = false;
 }
 
 // ============================================
-// Editor
+// Editor Section
 // ============================================
+
+// Toggle editor section
+editorToggle.addEventListener('click', () => {
+  editorSection.classList.toggle('expanded');
+});
 
 async function initEditor() {
   // Dynamically import CodeMirror
@@ -224,17 +268,17 @@ function validateAndPreview() {
     editorStatus.textContent = '✓ Valid JSON';
     editorStatus.className = 'editor-status success';
     
-    updatePreview();
+    updateBarcodeData();
   } catch (e) {
     editorStatus.textContent = `✗ ${(e as Error).message}`;
     editorStatus.className = 'editor-status error';
   }
 }
 
-function updatePreview() {
+function updateBarcodeData() {
   if (!state.currentPayload) {
-    previewBarcodes.innerHTML = '';
-    previewCount.textContent = '0 barcodes';
+    payloadBadge.textContent = '0 barcodes';
+    editorBadge.textContent = '0 barcodes';
     return;
   }
   
@@ -244,39 +288,18 @@ function updatePreview() {
     const data = engine.getBarcodeData(state.currentPayload);
     
     state.barcodeData = data;
-    previewCount.textContent = `${data.barcodes.length} barcodes`;
+    const count = data.barcodes.length;
+    const label = `${count} barcode${count !== 1 ? 's' : ''}`;
+    payloadBadge.textContent = label;
+    editorBadge.textContent = label;
     
-    // Render preview barcodes (limit to 10)
-    previewBarcodes.innerHTML = '';
-    const limit = Math.min(data.barcodes.length, 10);
-    
-    for (let i = 0; i < limit; i++) {
-      const container = document.createElement('div');
-      container.className = 'preview-barcode';
-      
-      const canvas = document.createElement('canvas');
-      container.appendChild(canvas);
-      previewBarcodes.appendChild(container);
-      
-      renderToCanvas(canvas, {
-        symbology: data.symbology,
-        data: data.barcodes[i],
-        scale: 2,
-        ...data.BWIPPoptions,
-      }).catch(e => {
-        console.error('Preview render error:', e);
-        container.innerHTML = `<span style="color: red">Error: ${data.barcodes[i].slice(0, 20)}...</span>`;
-      });
-    }
-    
-    if (data.barcodes.length > limit) {
-      const more = document.createElement('div');
-      more.className = 'preview-more';
-      more.textContent = `+ ${data.barcodes.length - limit} more...`;
-      previewBarcodes.appendChild(more);
-    }
+    // Reset progress
+    progressFill.style.width = '0%';
+    progressText.textContent = `0 / ${count}`;
   } catch (e) {
-    console.error('Preview error:', e);
+    console.error('Error generating barcode data:', e);
+    payloadBadge.textContent = 'Error';
+    editorBadge.textContent = 'Error';
   }
 }
 
@@ -293,15 +316,21 @@ $('#saveBtn')?.addEventListener('click', () => {
     if (presets[state.currentPayloadId!]) {
       const stored = createPayload(payload);
       state.currentPayloadId = stored.id;
+      state.isPreset = false;
     } else if (state.currentPayloadId) {
       updatePayload(state.currentPayloadId, payload);
     } else {
       const stored = createPayload(payload);
       state.currentPayloadId = stored.id;
+      state.isPreset = false;
     }
     
     state.currentPayload = payload;
     state.editorDirty = false;
+    
+    // Update title
+    payloadTitle.textContent = payload.name;
+    
     renderPayloadList();
     editorStatus.textContent = '✓ Saved';
     editorStatus.className = 'editor-status success';
@@ -313,11 +342,22 @@ $('#saveBtn')?.addEventListener('click', () => {
 
 $('#newPayloadBtn')?.addEventListener('click', () => {
   state.currentPayloadId = null;
+  state.isPreset = false;
   state.currentPayload = {
     name: 'New Payload',
     description: '',
     payload: [],
   };
+  
+  // Show payload view
+  emptyState.classList.add('hidden');
+  payloadView.classList.remove('hidden');
+  
+  // Update header
+  payloadTitle.textContent = 'New Payload';
+  
+  // Expand editor for new payloads
+  editorSection.classList.add('expanded');
   
   payloadNameInput.value = 'New Payload';
   if (editor) {
@@ -327,7 +367,13 @@ $('#newPayloadBtn')?.addEventListener('click', () => {
     });
   }
   
+  updateBarcodeData();
   renderPayloadList();
+  
+  // Close mobile sidebar
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove('open');
+  }
 });
 
 $('#validateBtn')?.addEventListener('click', validateAndPreview);
@@ -375,7 +421,7 @@ $('#exportBtn')?.addEventListener('click', () => {
 });
 
 // ============================================
-// Runner
+// Runner Section
 // ============================================
 
 function initRunner() {
@@ -387,7 +433,7 @@ function initRunner() {
   
   modelSelect.addEventListener('change', () => {
     state.settings = saveSettings({ modelId: modelSelect.value });
-    updatePreview();
+    updateBarcodeData();
   });
   
   // Display mode buttons
@@ -412,7 +458,7 @@ function initRunner() {
   
   // Fullscreen on click
   barcodeContainer.addEventListener('click', () => {
-    if (state.barcodeData && state.barcodeData.barcodes.length > 0) {
+    if (state.barcodeData && state.barcodeData.barcodes.length > 0 && !state.isRunning) {
       barcodeContainer.requestFullscreen?.();
     }
   });
@@ -427,8 +473,14 @@ function updateRunnerUI() {
     (el as HTMLElement).style.display = showFor === mode ? '' : 'none';
   });
   
-  // Show/hide manual nav
-  runnerNav.classList.toggle('hidden', mode !== 'manual' || !state.isRunning);
+  // Update nav button visibility based on mode and running state
+  if (mode === 'manual' && state.isRunning) {
+    prevBtn.classList.remove('hidden');
+    nextBtn.classList.remove('hidden');
+  } else {
+    prevBtn.classList.add('hidden');
+    nextBtn.classList.add('hidden');
+  }
 }
 
 function startRun() {
@@ -483,7 +535,8 @@ function stopRun() {
   
   runBtn.classList.remove('hidden');
   stopBtn.classList.add('hidden');
-  runnerNav.classList.add('hidden');
+  prevBtn.classList.add('hidden');
+  nextBtn.classList.add('hidden');
 }
 
 function renderCurrentBarcode() {
@@ -534,10 +587,10 @@ nextBtn.addEventListener('click', () => {
 });
 
 // ============================================
-// Share
+// Share Section
 // ============================================
 
-$('#generateShareBtn')?.addEventListener('click', () => {
+$('#generateShareBtn')?.addEventListener('click', async () => {
   if (!state.currentPayload) {
     alert('Select a payload first');
     return;
@@ -545,12 +598,21 @@ $('#generateShareBtn')?.addEventListener('click', () => {
   
   const url = generateShareUrl(state.currentPayload, state.settings);
   shareUrl.value = url;
-  shareQrCode.src = generateQrCodeUrl(url);
+  
+  // Render QR code locally using bwip-js
+  try {
+    await renderShareQrCode(shareQrCanvas, url);
+    shareQrPlaceholder.classList.add('hidden');
+  } catch (e) {
+    console.error('Failed to render QR code:', e);
+    shareQrPlaceholder.textContent = 'Failed to generate QR';
+  }
 });
 
 $('#copyUrlBtn')?.addEventListener('click', () => {
-  shareUrl.select();
-  navigator.clipboard.writeText(shareUrl.value);
+  if (shareUrl.value) {
+    navigator.clipboard.writeText(shareUrl.value);
+  }
 });
 
 // ============================================
@@ -566,9 +628,10 @@ async function init() {
       state.settings = saveSettings(shared.settings);
     }
     clearUrlHash();
+    await initEditor();
+    initRunner();
     renderPayloadList();
     selectPayload(stored.id);
-    switchTab('runner');
     return;
   }
   
@@ -576,12 +639,9 @@ async function init() {
   await initEditor();
   initRunner();
   renderPayloadList();
+  updateRunnerUI();
   
-  // Select first preset by default
-  const firstPreset = Object.keys(presets)[0];
-  if (firstPreset) {
-    selectPayload(firstPreset);
-  }
+  // Start with empty state visible (no payload selected)
 }
 
 init().catch(console.error);

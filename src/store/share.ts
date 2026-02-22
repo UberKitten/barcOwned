@@ -18,6 +18,7 @@
 
 import type { Payload } from '../core/types';
 import type { Settings } from './payloads';
+import { renderToCanvas } from '../core/render';
 
 /**
  * Data structure encoded in URL.
@@ -109,11 +110,20 @@ export function clearUrlHash(): void {
 }
 
 /**
- * Generate a QR code URL for sharing.
- * Uses a simple QR API for now - could render locally later.
+ * Render a QR code to a canvas element using bwip-js.
+ * 
+ * @param canvas - Target canvas element
+ * @param url - URL to encode in the QR code
  */
-export function generateQrCodeUrl(shareUrl: string, size: number = 256): string {
-  // Use QR Server API (free, no API key needed)
-  const encoded = encodeURIComponent(shareUrl);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}`;
+export async function renderShareQrCode(
+  canvas: HTMLCanvasElement,
+  url: string
+): Promise<void> {
+  await renderToCanvas(canvas, {
+    symbology: 'qrcode',
+    data: url,
+    scale: 4,
+    backgroundcolor: 'ffffff',
+    barcolor: '000000',
+  });
 }

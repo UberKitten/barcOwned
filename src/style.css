@@ -1,7 +1,7 @@
 /**
  * barcOwned v2 Styles
  * 
- * Dark theme, mobile-first, optimized for barcode display.
+ * Dark theme, mobile-first, single-page layout with sidebar.
  */
 
 /* ============================================
@@ -42,8 +42,7 @@
   
   /* Sizing */
   --nav-height: 56px;
-  --sidebar-width: 240px;
-  --preview-width: 280px;
+  --sidebar-width: 260px;
 }
 
 /* ============================================
@@ -88,12 +87,23 @@ body {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   gap: var(--space-lg);
+  flex-shrink: 0;
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+}
+
+.nav-menu-btn {
+  display: none;
+  padding: var(--space-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 20px;
+  cursor: pointer;
 }
 
 .nav-logo {
@@ -104,40 +114,6 @@ body {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.5px;
-}
-
-.nav-tabs {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.nav-tab {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  border: none;
-  border-radius: var(--border-radius);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.nav-tab:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.nav-tab.active {
-  background: var(--accent-primary);
-  color: white;
-}
-
-.nav-tab-icon {
-  font-size: 16px;
 }
 
 .nav-links {
@@ -158,46 +134,29 @@ body {
 }
 
 /* ============================================
-   Main Content
+   App Layout (Sidebar + Main)
    ============================================ */
 
-.main {
+.app-layout {
+  display: flex;
   flex: 1;
   overflow: hidden;
-  position: relative;
-}
-
-.panel {
-  position: absolute;
-  inset: 0;
-  display: none;
-  overflow: hidden;
-}
-
-.panel.active {
-  display: flex;
 }
 
 /* ============================================
-   Editor Panel
+   Sidebar
    ============================================ */
 
-.editor-layout {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr var(--preview-width);
-  height: 100%;
-  overflow: hidden;
-}
-
-/* Payload Sidebar */
-.payload-sidebar {
+.sidebar {
   display: flex;
   flex-direction: column;
+  width: var(--sidebar-width);
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
-.payload-sidebar-header {
+.sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -205,7 +164,7 @@ body {
   border-bottom: 1px solid var(--border-color);
 }
 
-.payload-sidebar-header h2 {
+.sidebar-header h2 {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
@@ -219,6 +178,19 @@ body {
   padding: var(--space-sm);
 }
 
+.payload-section {
+  margin-bottom: var(--space-md);
+}
+
+.payload-section h4 {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .payload-item {
   display: flex;
   align-items: center;
@@ -227,6 +199,7 @@ body {
   color: var(--text-primary);
   cursor: pointer;
   transition: background 0.15s ease;
+  font-size: 13px;
 }
 
 .payload-item:hover {
@@ -247,26 +220,149 @@ body {
   font-size: 12px;
 }
 
-.payload-sidebar-footer {
+.sidebar-footer {
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-md);
   border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
 }
 
-/* Editor Main */
-.editor-main {
-  display: flex;
-  flex-direction: column;
+/* ============================================
+   Main Content Area
+   ============================================ */
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--bg-primary);
 }
 
-.editor-header {
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--space-xl);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-lg);
+  opacity: 0.3;
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+/* Payload View */
+.payload-view {
+  padding: var(--space-lg);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.payload-header {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border-color);
+}
+
+.payload-title {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.payload-badge {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   Sections (Editor, Runner, Share)
+   ============================================ */
+
+.section {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--space-lg);
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.section-header.static {
+  cursor: default;
+}
+
+.section-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.section-chevron {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.section.expanded .section-chevron {
+  transform: rotate(90deg);
+}
+
+.section-badge {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.section-content {
+  padding: var(--space-md);
+}
+
+/* Collapsed state */
+.section-editor:not(.expanded) .section-content {
+  display: none;
+}
+
+/* ============================================
+   Editor Section
+   ============================================ */
+
+.editor-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .payload-name-input {
@@ -274,7 +370,7 @@ body {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 16px;
   font-weight: 500;
@@ -291,8 +387,10 @@ body {
 }
 
 .editor-container {
-  flex: 1;
+  height: 300px;
+  border-radius: var(--border-radius-sm);
   overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .editor-container .cm-editor {
@@ -300,9 +398,10 @@ body {
 }
 
 .editor-status {
+  margin-top: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-sm);
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-muted);
@@ -316,75 +415,23 @@ body {
   color: var(--accent-success);
 }
 
-/* Preview Sidebar */
-.preview-sidebar {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-md);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.preview-header h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.preview-count {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.preview-barcodes {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.preview-barcode {
-  background: white;
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-sm);
-  display: flex;
-  justify-content: center;
-}
-
-.preview-barcode canvas {
-  max-width: 100%;
-  height: auto;
-}
-
 /* ============================================
-   Runner Panel
+   Runner Section
    ============================================ */
 
-.runner-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: var(--space-lg);
-  gap: var(--space-lg);
+.runner-controls {
+  margin-bottom: var(--space-lg);
 }
 
-.runner-controls {
+.control-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-lg);
-  align-items: flex-end;
-  padding: var(--space-md);
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius);
+  margin-bottom: var(--space-md);
+}
+
+.control-row:last-child {
+  margin-bottom: 0;
 }
 
 .control-group {
@@ -401,16 +448,11 @@ body {
   letter-spacing: 0.5px;
 }
 
-.runner-actions {
-  margin-left: auto;
-}
-
-.runner-display {
-  flex: 1;
+/* Barcode Display Area */
+.barcode-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: var(--space-lg);
 }
 
@@ -432,17 +474,13 @@ body {
   transform: scale(1.02);
 }
 
-.barcode-container:fullscreen {
-  padding: var(--space-xl);
-}
-
 #barcodeCanvas {
   max-width: 100%;
-  max-height: 60vh;
+  max-height: 50vh;
 }
 
 .barcode-placeholder {
-  color: var(--text-muted);
+  color: #666;
   font-size: 16px;
   text-align: center;
 }
@@ -452,7 +490,7 @@ body {
   align-items: center;
   gap: var(--space-md);
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .progress-bar {
@@ -474,68 +512,94 @@ body {
   font-size: 14px;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+  min-width: 60px;
+  text-align: right;
 }
 
 .runner-nav {
   display: flex;
+  align-items: center;
   gap: var(--space-md);
 }
 
+.runner-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 /* ============================================
-   Share Panel
+   Share Section
    ============================================ */
 
-.share-layout {
+.share-row {
+  display: flex;
+  gap: var(--space-xl);
+  align-items: flex-start;
+}
+
+.share-qr {
+  position: relative;
+  background: white;
+  border-radius: var(--border-radius);
+  padding: var(--space-md);
+  flex-shrink: 0;
+}
+
+.share-qr canvas {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+.share-qr-placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  padding: var(--space-xl);
+  color: #999;
+  font-size: 13px;
+  text-align: center;
+  padding: var(--space-md);
+  background: white;
+  border-radius: var(--border-radius);
 }
 
-.share-content {
+.share-qr-placeholder.hidden {
+  display: none;
+}
+
+.share-actions {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-lg);
-  max-width: 480px;
-  text-align: center;
-}
-
-.share-content h2 {
-  font-size: 24px;
+  gap: var(--space-md);
 }
 
 .share-description {
   color: var(--text-secondary);
+  font-size: 14px;
 }
 
-.share-qr {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: var(--space-md);
-}
-
-.share-qr img {
-  width: 256px;
-  height: 256px;
-}
-
-.share-url {
+.share-url-row {
   display: flex;
   gap: var(--space-sm);
-  width: 100%;
 }
 
-.share-url input {
+.share-url-row input {
   flex: 1;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 12px;
+}
+
+.share-url-row input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
 }
 
 /* ============================================
@@ -626,7 +690,7 @@ body {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 14px;
   cursor: pointer;
@@ -701,39 +765,73 @@ body {
   display: none !important;
 }
 
-/* Mobile Responsiveness */
+/* ============================================
+   Mobile Responsiveness
+   ============================================ */
+
 @media (max-width: 768px) {
-  .nav-tab-label {
-    display: none;
+  .nav-menu-btn {
+    display: block;
   }
   
   .nav-links {
     display: none;
   }
   
-  .editor-layout {
-    grid-template-columns: 1fr;
+  .sidebar {
+    position: fixed;
+    top: var(--nav-height);
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
   }
   
-  .payload-sidebar,
-  .preview-sidebar {
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .payload-view {
+    padding: var(--space-md);
+  }
+  
+  .payload-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .control-row {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .share-row {
+    flex-direction: column;
+  }
+  
+  .share-qr {
+    align-self: center;
+  }
+  
+  /* Editor always collapsed on mobile */
+  .section-editor .section-content {
     display: none;
   }
   
-  .runner-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .runner-actions {
-    margin-left: 0;
-    margin-top: var(--space-md);
+  .runner-nav {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 
-/* Fullscreen barcode */
+/* ============================================
+   Fullscreen barcode
+   ============================================ */
+
 .barcode-container:fullscreen {
   background: white;
+  padding: var(--space-xl);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -742,4 +840,8 @@ body {
 .barcode-container:fullscreen #barcodeCanvas {
   max-width: 90vw;
   max-height: 90vh;
+}
+
+.barcode-container:fullscreen .barcode-placeholder {
+  display: none;
 }
