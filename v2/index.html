@@ -87,6 +87,15 @@
                 <!-- Populated by JS -->
               </select>
             </div>
+
+            <div class="toolbar-separator"></div>
+
+            <div class="toolbar-group">
+              <button class="toolbar-btn" id="previewBtn" title="Toggle preview">
+                <span class="toolbar-icon">👁</span>
+                <span class="toolbar-label">Preview</span>
+              </button>
+            </div>
             
             <div class="toolbar-separator"></div>
             
@@ -102,9 +111,82 @@
             </div>
           </div>
 
-          <!-- CodeMirror Editor -->
-          <div class="editor-container" id="editorContainer">
-            <!-- CodeMirror mounts here -->
+          <!-- Editor Body (Editor or Runner) -->
+          <div class="editor-body">
+            <!-- CodeMirror Editor -->
+            <div class="editor-container" id="editorContainer">
+              <!-- CodeMirror mounts here -->
+            </div>
+
+            <!-- Runner View (shown during run) -->
+            <div class="runner-view hidden" id="runnerView">
+              <header class="runner-header">
+                <button class="btn btn-ghost" id="backToEditorBtn">← Back to Editor</button>
+                <h2 id="runnerTitle">Running: Payload Name</h2>
+              </header>
+              
+              <!-- Inline message area for runner -->
+              <div class="runner-message hidden" id="runnerMessage"></div>
+
+              <!-- Runner Controls -->
+              <div class="runner-controls">
+                <div class="control-group">
+                  <label>Mode</label>
+                  <div class="mode-toggle">
+                    <span class="mode-label" id="modeLabel">Auto (recommended)</span>
+                    <button class="btn btn-sm" id="modeToggleBtn">Switch to Manual</button>
+                  </div>
+                </div>
+                
+                <div class="control-group" data-show-for="auto">
+                  <label>Speed</label>
+                  <select id="autoRate" class="select">
+                    <option value="0.25">0.25 Hz (4s)</option>
+                    <option value="0.4" selected>0.4 Hz (2.5s)</option>
+                    <option value="0.5">0.5 Hz (2s)</option>
+                    <option value="1.0">1.0 Hz (1s)</option>
+                    <option value="2.0">2.0 Hz (0.5s)</option>
+                  </select>
+                </div>
+                
+                <div class="control-group" data-show-for="auto">
+                  <label>Start Delay</label>
+                  <select id="startDelay" class="select">
+                    <option value="0">None</option>
+                    <option value="1">1 second</option>
+                    <option value="2">2 seconds</option>
+                    <option value="3" selected>3 seconds</option>
+                    <option value="5">5 seconds</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Barcode Display -->
+              <div class="barcode-display">
+                <div class="barcode-container" id="barcodeContainer">
+                  <canvas id="barcodeCanvas"></canvas>
+                  <div class="barcode-label" id="barcodeLabel"></div>
+                </div>
+                
+                <div class="runner-progress">
+                  <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                  </div>
+                  <span class="progress-text" id="progressText">0 / 0</span>
+                </div>
+                
+                <div class="runner-nav">
+                  <button class="btn btn-lg" id="prevBtn">← Prev</button>
+                  <button class="btn btn-lg btn-primary" id="startBtn">
+                    <span>▶ Start</span>
+                  </button>
+                  <button class="btn btn-lg btn-danger hidden" id="stopBtn">
+                    <span>■ Stop</span>
+                  </button>
+                  <button class="btn btn-lg" id="nextBtn">Next →</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Status Bar -->
@@ -112,76 +194,6 @@
             <span class="status-validation" id="statusValidation">Ready</span>
             <span class="status-spacer"></span>
             <span class="status-position" id="statusPosition">Ln 1, Col 1</span>
-          </div>
-        </div>
-
-        <!-- Runner View (shown during run) -->
-        <div class="runner-view hidden" id="runnerView">
-          <header class="runner-header">
-            <h2 id="runnerTitle">Running: Payload Name</h2>
-            <button class="btn btn-ghost" id="backToEditorBtn">← Back to Editor</button>
-          </header>
-          
-          <!-- Inline message area for runner -->
-          <div class="runner-message hidden" id="runnerMessage"></div>
-
-          <!-- Runner Controls -->
-          <div class="runner-controls">
-            <div class="control-group">
-              <label>Display Mode</label>
-              <div class="btn-group" id="displayModeGroup">
-                <button class="btn btn-sm" data-value="manual">Manual</button>
-                <button class="btn btn-sm active" data-value="auto">Auto</button>
-              </div>
-            </div>
-            
-            <div class="control-group" data-show-for="auto">
-              <label>Speed</label>
-              <select id="autoRate" class="select">
-                <option value="0.25">0.25 Hz (4s)</option>
-                <option value="0.4" selected>0.4 Hz (2.5s)</option>
-                <option value="0.5">0.5 Hz (2s)</option>
-                <option value="1.0">1.0 Hz (1s)</option>
-                <option value="2.0">2.0 Hz (0.5s)</option>
-              </select>
-            </div>
-            
-            <div class="control-group" data-show-for="auto">
-              <label>Start Delay</label>
-              <select id="startDelay" class="select">
-                <option value="0">None</option>
-                <option value="1">1 second</option>
-                <option value="2">2 seconds</option>
-                <option value="3" selected>3 seconds</option>
-                <option value="5">5 seconds</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Barcode Display -->
-          <div class="barcode-display">
-            <div class="barcode-container" id="barcodeContainer">
-              <canvas id="barcodeCanvas"></canvas>
-              <div class="barcode-label" id="barcodeLabel"></div>
-            </div>
-            
-            <div class="runner-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-              </div>
-              <span class="progress-text" id="progressText">0 / 0</span>
-            </div>
-            
-            <div class="runner-nav">
-              <button class="btn btn-lg" id="prevBtn">← Prev</button>
-              <button class="btn btn-lg btn-primary" id="startBtn">
-                <span>▶ Start</span>
-              </button>
-              <button class="btn btn-lg btn-danger hidden" id="stopBtn">
-                <span>■ Stop</span>
-              </button>
-              <button class="btn btn-lg" id="nextBtn">Next →</button>
-            </div>
           </div>
         </div>
       </main>

@@ -38,6 +38,7 @@ import {
   iconExport,
   iconCopy,
   iconArrowLeft,
+  iconPanelRight,
   iconX,
   iconTrash,
 } from './icons';
@@ -107,17 +108,20 @@ const modelSelect = $<HTMLSelectElement>('#modelSelect')!;
 
 // Editor
 const editorContainer = $<HTMLDivElement>('#editorContainer')!;
+const editorStatusbar = $<HTMLDivElement>('#editorStatusbar')!;
 const statusValidation = $<HTMLSpanElement>('#statusValidation')!;
 const statusPosition = $<HTMLSpanElement>('#statusPosition')!;
 
 // Preview
 const previewList = $<HTMLDivElement>('#previewList')!;
 const previewToggle = $<HTMLButtonElement>('#previewToggle')!;
+const previewBtn = $<HTMLButtonElement>('#previewBtn')!;
 
 // Runner
 const runnerTitle = $<HTMLElement>('#runnerTitle')!;
 const runnerMessage = $<HTMLDivElement>('#runnerMessage')!;
-const displayModeGroup = $<HTMLDivElement>('#displayModeGroup')!;
+const modeLabel = $<HTMLSpanElement>('#modeLabel')!;
+const modeToggleBtn = $<HTMLButtonElement>('#modeToggleBtn')!;
 const autoRateSelect = $<HTMLSelectElement>('#autoRate')!;
 const startDelaySelect = $<HTMLSelectElement>('#startDelay')!;
 const barcodeCanvas = $<HTMLCanvasElement>('#barcodeCanvas')!;
@@ -171,9 +175,20 @@ menuToggle.addEventListener('click', () => {
   sidebarLeft.classList.toggle('open');
 });
 
+function updatePreviewToggle() {
+  const isVisible = !sidebarRight.classList.contains('hidden');
+  previewBtn.classList.toggle('active', isVisible);
+}
+
 // Preview Toggle (right sidebar)
 previewToggle.addEventListener('click', () => {
+  sidebarRight.classList.add('hidden');
+  updatePreviewToggle();
+});
+
+previewBtn.addEventListener('click', () => {
   sidebarRight.classList.toggle('hidden');
+  updatePreviewToggle();
 });
 
 // Close sidebar when clicking outside on mobile
@@ -193,7 +208,7 @@ document.addEventListener('click', (e) => {
 function renderPayloadList() {
   const userPayloads = loadPayloads();
   
-  let html = '<div class="payload-section"><h4>Presets</h4>';
+  let html = '<div class="payload-section"><h4>Examples</h4>';
   for (const [id, payload] of Object.entries(presets)) {
     const active = state.currentPayloadId === id ? 'active' : '';
     html += `<div class="payload-item preset ${active}" data-id="${id}">
@@ -324,10 +339,16 @@ function showView(view: 'editor' | 'runner') {
   state.view = view;
   
   emptyState.classList.add('hidden');
-  editorView.classList.toggle('hidden', view !== 'editor');
-  runnerView.classList.toggle('hidden', view !== 'runner');
-  
-  if (view === 'runner') {
+  editorView.classList.remove('hidden');
+
+  if (view === 'editor') {
+    runnerView.classList.add('hidden');
+    editorContainer.classList.remove('hidden');
+    editorStatusbar.classList.remove('hidden');
+  } else {
+    runnerView.classList.remove('hidden');
+    editorContainer.classList.add('hidden');
+    editorStatusbar.classList.add('hidden');
     runnerTitle.textContent = `Running: ${state.currentPayload?.name || 'Payload'}`;
     hideRunnerMessage();
     updateRunnerUI();
@@ -712,15 +733,12 @@ function initRunner() {
     updateBarcodeData();
     renderPreview();
   });
-  
-  // Display mode buttons
-  displayModeGroup.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      displayModeGroup.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.settings = saveSettings({ displayMode: (btn as HTMLElement).dataset.value as any });
-      updateRunnerUI();
-    });
+
+  // Mode toggle button
+  modeToggleBtn.addEventListener('click', () => {
+    const newMode = state.settings.displayMode === 'auto' ? 'manual' : 'auto';
+    state.settings = saveSettings({ displayMode: newMode });
+    updateRunnerUI();
   });
   
   // Auto rate
@@ -732,11 +750,18 @@ function initRunner() {
   startDelaySelect.addEventListener('change', () => {
     state.settings = saveSettings({ startDelay: parseInt(startDelaySelect.value) });
   });
+
+  updateRunnerUI();
 }
 
 function updateRunnerUI() {
   const mode = state.settings.displayMode;
-  
+  const isAuto = mode === 'auto';
+
+  // Update mode toggle label/button
+  modeLabel.textContent = isAuto ? 'Auto (recommended)' : 'Manual';
+  modeToggleBtn.textContent = isAuto ? 'Switch to Manual' : 'Switch to Auto';
+
   // Show/hide mode-specific controls
   document.querySelectorAll('[data-show-for]').forEach(el => {
     const showFor = (el as HTMLElement).dataset.showFor;
@@ -937,6 +962,9 @@ function initIcons() {
   // Toolbar
   const saveIcon = $('#saveBtn .toolbar-icon');
   if (saveIcon) saveIcon.innerHTML = iconSave;
+
+  const previewIcon = $('#previewBtn .toolbar-icon');
+  if (previewIcon) previewIcon.innerHTML = iconPanelRight;
   
   const runIcon = $('#runBtn .toolbar-icon');
   if (runIcon) runIcon.innerHTML = iconPlay;
@@ -1009,6 +1037,7 @@ async function init() {
   await initEditor();
   initRunner();
   renderPayloadList();
+  updatePreviewToggle();
   
   // Default: select "Hello World" preset
   const defaultPresetId = Object.keys(presets)[0];

@@ -119,6 +119,12 @@ export const iconArrowLeft = createIcon(`
   <path d="M19 12H5"/>
 `);
 
+// Panel right (preview toggle)
+export const iconPanelRight = createIcon(`
+  <rect x="3" y="4" width="18" height="16" rx="2"/>
+  <line x1="15" y1="4" x2="15" y2="20"/>
+`);
+
 // ScanBarcode (alternate logo option)
 export const iconScanBarcode = createIcon(`
   <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
