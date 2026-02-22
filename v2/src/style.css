@@ -186,6 +186,10 @@ body {
   border-left: 1px solid var(--border-color);
 }
 
+.sidebar-right.hidden {
+  display: none;
+}
+
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -253,6 +257,34 @@ body {
   cursor: pointer;
   transition: background 0.15s ease;
   font-size: var(--font-size-sm);
+}
+
+.payload-delete {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.payload-item:hover .payload-delete,
+.payload-item.active .payload-delete {
+  opacity: 1;
+}
+
+.payload-delete:hover {
+  color: var(--accent-danger);
+}
+
+.payload-delete svg {
+  width: 14px;
+  height: 14px;
 }
 
 .payload-item:hover {
@@ -882,6 +914,7 @@ body {
 
 .modal-content {
   background: var(--bg-secondary);
+  color: var(--text-primary);
   border-radius: var(--border-radius);
   padding: var(--space-lg);
   min-width: 380px;
@@ -935,6 +968,10 @@ body {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   resize: vertical;
+}
+
+.modal-content textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .modal-actions {

@@ -35,6 +35,15 @@ export const iconX = createIcon(`
   <path d="m6 6 12 12"/>
 `);
 
+// Trash (delete)
+export const iconTrash = createIcon(`
+  <path d="M3 6h18"/>
+  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+  <path d="M10 11v6"/>
+  <path d="M14 11v6"/>
+  <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/>
+`);
+
 // Save
 export const iconSave = createIcon(`
   <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
