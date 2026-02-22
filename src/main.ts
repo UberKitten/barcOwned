@@ -14,6 +14,7 @@ import {
   updatePayload,
   importPayloads,
   exportPayloads,
+  deletePayload,
   loadSettings,
   saveSettings,
   loadFromUrl,
@@ -38,6 +39,7 @@ import {
   iconCopy,
   iconArrowLeft,
   iconX,
+  iconTrash,
 } from './icons';
 
 // ============================================
@@ -86,6 +88,7 @@ const $ = <T extends HTMLElement>(selector: string): T | null =>
 
 // Layout
 const sidebarLeft = $<HTMLElement>('#sidebarLeft')!;
+const sidebarRight = $<HTMLElement>('#sidebarRight')!;
 const menuToggle = $<HTMLButtonElement>('#menuToggle')!;
 const emptyState = $<HTMLDivElement>('#emptyState')!;
 const editorView = $<HTMLDivElement>('#editorView')!;
@@ -109,6 +112,7 @@ const statusPosition = $<HTMLSpanElement>('#statusPosition')!;
 
 // Preview
 const previewList = $<HTMLDivElement>('#previewList')!;
+const previewToggle = $<HTMLButtonElement>('#previewToggle')!;
 
 // Runner
 const runnerTitle = $<HTMLElement>('#runnerTitle')!;
@@ -167,6 +171,11 @@ menuToggle.addEventListener('click', () => {
   sidebarLeft.classList.toggle('open');
 });
 
+// Preview Toggle (right sidebar)
+previewToggle.addEventListener('click', () => {
+  sidebarRight.classList.toggle('hidden');
+});
+
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
   if (window.innerWidth <= 768 && 
@@ -200,6 +209,9 @@ function renderPayloadList() {
       const active = state.currentPayloadId === stored.id ? 'active' : '';
       html += `<div class="payload-item ${active}" data-id="${stored.id}">
         <span class="payload-item-name">${stored.payload.name}</span>
+        <button class="payload-delete" data-id="${stored.id}" title="Delete payload" aria-label="Delete payload">
+          ${iconTrash}
+        </button>
       </div>`;
     }
     html += '</div>';
@@ -217,6 +229,16 @@ function renderPayloadList() {
       }
     });
   });
+
+  // Delete buttons
+  payloadList.querySelectorAll<HTMLButtonElement>('.payload-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = (btn as HTMLElement).dataset.id!;
+      if (!id) return;
+      deletePayloadById(id);
+    });
+  });
   
   // Update export button state
   updateExportButtonState();
@@ -226,6 +248,30 @@ function updateExportButtonState() {
   const userPayloads = loadPayloads();
   exportBtn.disabled = userPayloads.length === 0;
   exportBtn.title = userPayloads.length === 0 ? 'No user payloads to export' : 'Export payloads';
+}
+
+function deletePayloadById(id: string) {
+  const wasCurrent = state.currentPayloadId === id;
+  const deleted = deletePayload(id);
+  if (!deleted) return;
+
+  if (wasCurrent) {
+    // Select default preset after delete
+    const defaultPresetId = Object.keys(presets)[0];
+    if (defaultPresetId) {
+      selectPayload(defaultPresetId);
+    } else {
+      state.currentPayloadId = null;
+      state.currentPayload = null;
+      state.isPreset = false;
+      emptyState.classList.remove('hidden');
+      editorView.classList.add('hidden');
+      runnerView.classList.add('hidden');
+    }
+  }
+
+  renderPayloadList();
+  updateStatusBar('✓ Payload deleted', false);
 }
 
 function selectPayload(id: string) {
