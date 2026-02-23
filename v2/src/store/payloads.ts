@@ -301,6 +301,8 @@ export interface DraftPayload {
   baseType: 'user' | 'preset' | 'new';
   /** Raw editor text (preserves invalid JSON) */
   text: string;
+  /** Editor scroll position */
+  scrollTop?: number;
   /** Last updated */
   updatedAt: number;
 }
@@ -356,6 +358,7 @@ export interface Settings {
   quietPeriod: number;
   darkMode: boolean;
   barcodeScale: number;
+  shareQrScale: number;
 }
 
 export const defaultSettings: Settings = {
@@ -367,6 +370,7 @@ export const defaultSettings: Settings = {
   quietPeriod: 0.5,
   darkMode: true,
   barcodeScale: 4,
+  shareQrScale: 3,
 };
 
 export function loadSettings(): Settings {

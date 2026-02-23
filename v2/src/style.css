@@ -499,12 +499,21 @@ body {
 
 .editor-description {
   margin-top: var(--space-xs);
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
 }
 
-.editor-description:empty {
-  display: none;
+#payloadDescriptionInput {
+  width: 100%;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  resize: vertical;
+}
+
+#payloadDescriptionInput::placeholder {
+  color: var(--text-muted);
 }
 
 /* Editor Toolbar */
@@ -1174,6 +1183,23 @@ body {
   background: white;
   border-radius: var(--border-radius-sm);
   padding: var(--space-sm);
+  max-width: 100%;
+  height: auto;
+}
+
+.share-size-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.share-size-value {
+  min-width: 60px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .share-description {
