@@ -84,16 +84,34 @@ export type AdfCriteria = [string, ...string[]];
 export type AdfAction = [string, ...string[]];
 
 /**
+ * A single barcode entry (code + optional metadata).
+ */
+export interface BarcodeEntry {
+  /** Barcode data string to encode */
+  code: string;
+  /** Human-readable comment describing what this barcode does */
+  comment?: string;
+  /** Optional per-barcode symbology override */
+  symbology?: string;
+  /** Optional per-barcode BWIPP options override */
+  BWIPPoptions?: Record<string, unknown>;
+}
+
+/**
  * Output from the barcode generation engine.
  * This is what gets rendered into actual barcodes.
  */
 export interface BarcodeData {
-  /** Array of barcode data strings to encode */
-  barcodes: string[];
+  /** Array of barcode entries to encode */
+  barcodes: BarcodeEntry[];
   /** Barcode symbology to use (e.g., 'code128', 'datamatrix') */
   symbology: string;
   /** BWIPP rendering options */
   BWIPPoptions: Record<string, unknown>;
+  /** Number of setup barcodes at the start of the list */
+  setupCount?: number;
+  /** Optional combined/optimized variant (e.g., C40 aggregation) */
+  combined?: BarcodeData;
 }
 
 /**

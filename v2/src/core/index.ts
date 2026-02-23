@@ -51,6 +51,7 @@ export type {
   AdfRule,
   AdfCriteria,
   AdfAction,
+  BarcodeEntry,
   BarcodeData,
   ScannerModel,
   ScannerSetup,
