@@ -18,9 +18,13 @@ export {
   loadSettings,
   saveSettings,
   defaultSettings,
+  loadDrafts,
+  saveDraft,
+  deleteDraft,
+  getDraft,
 } from './payloads';
 
-export type { StoredPayload, Settings } from './payloads';
+export type { StoredPayload, Settings, DraftPayload } from './payloads';
 
 export {
   encodeToHash,

@@ -247,6 +247,18 @@ body {
   letter-spacing: 0.5px;
 }
 
+.payload-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-sm);
+}
+
+.payload-new-btn {
+  font-size: var(--font-size-xs);
+  padding: 4px 6px;
+}
+
 .payload-item {
   display: flex;
   align-items: center;
@@ -321,6 +333,58 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dirty-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-danger);
+  display: inline-block;
+}
+
+.dirty-dot.hidden {
+  display: none;
+}
+
+.payload-item.dirty .payload-item-name {
+  font-weight: 600;
+}
+
+.payload-duplicate,
+.payload-delete {
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.payload-item:hover .payload-duplicate,
+.payload-item:hover .payload-delete,
+.payload-item.active .payload-duplicate,
+.payload-item.active .payload-delete {
+  opacity: 1;
+}
+
+.payload-duplicate:hover {
+  color: var(--accent-primary);
+}
+
+.payload-delete:hover {
+  color: var(--accent-danger);
+}
+
+.payload-duplicate svg,
+.payload-delete svg {
+  width: 14px;
+  height: 14px;
 }
 
 .sidebar-footer {
@@ -454,6 +518,14 @@ body {
   height: var(--toolbar-height);
 }
 
+.toolbar-spacer {
+  flex: 1;
+}
+
+.toolbar-right {
+  margin-left: auto;
+}
+
 .toolbar-group {
   display: flex;
   align-items: center;
@@ -479,6 +551,7 @@ body {
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all 0.15s ease;
+  position: relative;
 }
 
 .toolbar-btn:hover {
@@ -515,6 +588,13 @@ body {
 .toolbar-btn-primary .toolbar-icon svg {
   width: 18px;
   height: 18px;
+}
+
+.save-btn .dirty-dot,
+#saveDirtyDot {
+  position: absolute;
+  right: 6px;
+  top: 6px;
 }
 
 .toolbar-label {
@@ -560,6 +640,10 @@ body {
 
 .editor-container .cm-gutters {
   font-size: 13px;
+}
+
+.editor-container .line-dirty {
+  background: rgba(239, 68, 68, 0.12);
 }
 
 /* Status Bar */
@@ -710,6 +794,19 @@ body {
   border-radius: var(--border-radius);
 }
 
+.size-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.size-value {
+  min-width: 60px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .mode-toggle {
   display: inline-flex;
   align-items: center;
@@ -777,18 +874,30 @@ body {
 
 .runner-progress {
   display: flex;
-  align-items: center;
-  gap: var(--space-md);
+  flex-direction: column;
+  gap: var(--space-sm);
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .progress-bar {
-  flex: 1;
+  width: 100%;
   height: 10px;
   background: var(--bg-tertiary);
   border-radius: 5px;
   overflow: hidden;
+}
+
+.progress-bar-time {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
 }
 
 .progress-fill {
@@ -798,12 +907,15 @@ body {
   width: 0%;
 }
 
-.progress-text {
+.time-fill {
+  background: var(--accent-warning);
+}
+
+.progress-text,
+.time-text {
   font-size: var(--font-size-base);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-  min-width: 70px;
-  text-align: right;
 }
 
 .runner-nav {
@@ -932,6 +1044,8 @@ body {
   background: transparent;
   max-width: none;
   max-height: none;
+  width: 100%;
+  height: 100%;
   display: none;
   color: var(--text-primary);
 }
@@ -1019,6 +1133,23 @@ body {
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: var(--space-md);
+}
+
+/* Import file row */
+.import-file-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.import-file-row input[type="file"] {
+  display: none;
+}
+
+.import-file-hint {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 
 /* Import error message */

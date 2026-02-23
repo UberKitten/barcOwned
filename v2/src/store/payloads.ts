@@ -9,6 +9,7 @@ import type { Payload } from '../core/types';
 
 const STORAGE_KEY = 'barcowned_payloads';
 const SETTINGS_KEY = 'barcowned_settings';
+const DRAFTS_KEY = 'barcowned_drafts';
 
 /**
  * Built-in preset payloads.
@@ -287,6 +288,62 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
 }
 
+// ============================================
+// Drafts (working copies)
+// ============================================
+
+export interface DraftPayload {
+  /** Draft id (same as base id for saved/preset, or unique for new drafts) */
+  id: string;
+  /** Base id if this draft is for an existing payload/preset */
+  baseId?: string;
+  /** Base type */
+  baseType: 'user' | 'preset' | 'new';
+  /** Raw editor text (preserves invalid JSON) */
+  text: string;
+  /** Last updated */
+  updatedAt: number;
+}
+
+export function loadDrafts(): DraftPayload[] {
+  try {
+    const raw = localStorage.getItem(DRAFTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load drafts:', e);
+    return [];
+  }
+}
+
+export function saveDrafts(drafts: DraftPayload[]): void {
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+
+export function saveDraft(draft: DraftPayload): DraftPayload {
+  const drafts = loadDrafts();
+  const index = drafts.findIndex((d) => d.id === draft.id);
+  if (index === -1) {
+    drafts.push(draft);
+  } else {
+    drafts[index] = { ...drafts[index], ...draft };
+  }
+  saveDrafts(drafts);
+  return draft;
+}
+
+export function deleteDraft(id: string): void {
+  const drafts = loadDrafts();
+  const index = drafts.findIndex((d) => d.id === id);
+  if (index === -1) return;
+  drafts.splice(index, 1);
+  saveDrafts(drafts);
+}
+
+export function getDraft(id: string): DraftPayload | undefined {
+  return loadDrafts().find((d) => d.id === id);
+}
+
 /**
  * Settings storage.
  */
@@ -298,6 +355,7 @@ export interface Settings {
   startDelay: number;
   quietPeriod: number;
   darkMode: boolean;
+  barcodeScale: number;
 }
 
 export const defaultSettings: Settings = {
@@ -308,6 +366,7 @@ export const defaultSettings: Settings = {
   startDelay: 3,
   quietPeriod: 0.5,
   darkMode: true,
+  barcodeScale: 4,
 };
 
 export function loadSettings(): Settings {

@@ -45,9 +45,9 @@
         </div>
         
         <div class="sidebar-footer">
-          <button class="btn btn-sm btn-primary" id="newPayloadBtn">+ New</button>
           <button class="btn btn-sm btn-ghost" id="importBtn">Import</button>
           <button class="btn btn-sm btn-ghost" id="exportBtn" disabled>Export</button>
+          <button class="btn btn-sm btn-ghost" id="exportAllBtn" disabled>Export All</button>
         </div>
       </aside>
 
@@ -74,39 +74,39 @@
           <!-- Toolbar -->
           <div class="editor-toolbar">
             <div class="toolbar-group">
-              <button class="toolbar-btn" id="saveBtn" title="Save payload">
-                <span class="toolbar-icon">💾</span>
-                <span class="toolbar-label">Save</span>
-              </button>
-            </div>
-            
-            <div class="toolbar-separator"></div>
-            
-            <div class="toolbar-group">
-              <select id="modelSelect" class="toolbar-select" title="Scanner model">
-                <!-- Populated by JS -->
-              </select>
-            </div>
-
-            <div class="toolbar-separator"></div>
-
-            <div class="toolbar-group">
-              <button class="toolbar-btn" id="previewBtn" title="Toggle preview">
-                <span class="toolbar-icon">👁</span>
-                <span class="toolbar-label">Preview</span>
-              </button>
-            </div>
-            
-            <div class="toolbar-separator"></div>
-            
-            <div class="toolbar-group">
               <button class="toolbar-btn toolbar-btn-primary" id="runBtn" title="Run payload">
                 <span class="toolbar-icon">▶</span>
                 <span class="toolbar-label">Run</span>
               </button>
+            </div>
+
+            <div class="toolbar-separator"></div>
+
+            <div class="toolbar-group">
+              <button class="toolbar-btn" id="saveBtn" title="Save payload">
+                <span class="toolbar-icon">💾</span>
+                <span class="toolbar-label">Save</span>
+                <span class="dirty-dot hidden" id="saveDirtyDot"></span>
+              </button>
+              <button class="toolbar-btn" id="discardBtn" title="Discard changes">
+                <span class="toolbar-icon">↩</span>
+                <span class="toolbar-label">Discard</span>
+              </button>
               <button class="toolbar-btn" id="shareBtn" title="Share payload">
                 <span class="toolbar-icon">↗</span>
                 <span class="toolbar-label">Share</span>
+              </button>
+            </div>
+
+            <div class="toolbar-spacer"></div>
+
+            <div class="toolbar-group toolbar-right">
+              <select id="modelSelect" class="toolbar-select" title="Scanner model">
+                <!-- Populated by JS -->
+              </select>
+              <button class="toolbar-btn" id="previewBtn" title="Toggle preview">
+                <span class="toolbar-icon">👁</span>
+                <span class="toolbar-label">Preview</span>
               </button>
             </div>
           </div>
@@ -131,14 +131,6 @@
               <!-- Runner Controls -->
               <div class="runner-controls">
                 <div class="control-group">
-                  <label>Mode</label>
-                  <div class="mode-toggle">
-                    <span class="mode-label" id="modeLabel">Auto (recommended)</span>
-                    <button class="btn btn-sm" id="modeToggleBtn">Switch to Manual</button>
-                  </div>
-                </div>
-                
-                <div class="control-group" data-show-for="auto">
                   <label>Speed</label>
                   <select id="autoRate" class="select">
                     <option value="0.25">0.25 Hz (4s)</option>
@@ -149,7 +141,7 @@
                   </select>
                 </div>
                 
-                <div class="control-group" data-show-for="auto">
+                <div class="control-group">
                   <label>Start Delay</label>
                   <select id="startDelay" class="select">
                     <option value="0">None</option>
@@ -158,6 +150,16 @@
                     <option value="3" selected>3 seconds</option>
                     <option value="5">5 seconds</option>
                   </select>
+                </div>
+
+                <div class="control-group">
+                  <label>Size</label>
+                  <div class="size-controls">
+                    <button class="btn btn-sm" id="sizeMinusBtn">-</button>
+                    <span class="size-value" id="sizeValue">100%</span>
+                    <button class="btn btn-sm" id="sizePlusBtn">+</button>
+                    <button class="btn btn-sm" id="sizeFullscreenBtn">Fullscreen</button>
+                  </div>
                 </div>
               </div>
 
@@ -169,19 +171,22 @@
                 </div>
                 
                 <div class="runner-progress">
+                  <div class="progress-row">
+                    <span class="progress-text" id="progressText">0 / 0</span>
+                    <span class="time-text" id="timeText">Paused</span>
+                  </div>
                   <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                   </div>
-                  <span class="progress-text" id="progressText">0 / 0</span>
+                  <div class="progress-bar progress-bar-time">
+                    <div class="progress-fill time-fill" id="timeProgressFill"></div>
+                  </div>
                 </div>
                 
                 <div class="runner-nav">
                   <button class="btn btn-lg" id="prevBtn">← Prev</button>
-                  <button class="btn btn-lg btn-primary" id="startBtn">
-                    <span>▶ Start</span>
-                  </button>
-                  <button class="btn btn-lg btn-danger hidden" id="stopBtn">
-                    <span>■ Stop</span>
+                  <button class="btn btn-lg btn-primary" id="playPauseBtn">
+                    <span>▶ Play</span>
                   </button>
                   <button class="btn btn-lg" id="nextBtn">Next →</button>
                 </div>
@@ -241,11 +246,31 @@
   <dialog id="importModal" class="modal">
     <div class="modal-content">
       <h2>Import Payload</h2>
+      <div class="import-file-row">
+        <input type="file" id="importFiles" multiple accept="application/json,.json">
+        <label class="btn btn-sm btn-ghost" for="importFiles" id="importFilesBtn">Choose files</label>
+        <span class="import-file-hint" id="importFileHint">or paste JSON below</span>
+      </div>
       <textarea id="importTextarea" placeholder="Paste payload JSON here..."></textarea>
       <div class="import-error hidden" id="importError"></div>
       <div class="modal-actions">
         <button class="btn btn-ghost" id="importCancelBtn">Cancel</button>
         <button class="btn btn-primary" id="importConfirmBtn">Import</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Delete Confirm Modal -->
+  <dialog id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Delete payload?</h2>
+        <button class="modal-close" id="deleteCloseBtn">×</button>
+      </div>
+      <p id="deleteMessage">This will permanently delete the selected payload.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
       </div>
     </div>
   </dialog>
