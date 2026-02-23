@@ -1388,7 +1388,7 @@ function updatePlayPauseButton() {
 
 function adjustBarcodeScale(delta: number) {
   const current = state.settings.barcodeScale ?? 4;
-  const next = Math.max(0.5, current + delta);
+  const next = Math.max(0.1, current + delta);
   state.settings = saveSettings({ barcodeScale: next });
   updateSizeLabel();
   renderCurrentBarcode();
