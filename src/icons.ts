@@ -113,6 +113,31 @@ export const iconCopy = createIcon(`
   <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
 `);
 
+// Pause
+export const iconPause = createIcon(`
+  <rect x="6" y="4" width="4" height="16"/>
+  <rect x="14" y="4" width="4" height="16"/>
+`, 20);
+
+// Minus
+export const iconMinus = createIcon(`
+  <path d="M5 12h14"/>
+`);
+
+// Maximize / fullscreen
+export const iconMaximize = createIcon(`
+  <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+  <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+  <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+  <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+`);
+
+// Undo (discard)
+export const iconUndo = createIcon(`
+  <path d="M9 14 4 9l5-5"/>
+  <path d="M4 9h10a6 6 0 0 1 0 12h-1"/>
+`);
+
 // Arrow left (back)
 export const iconArrowLeft = createIcon(`
   <path d="m12 19-7-7 7-7"/>
