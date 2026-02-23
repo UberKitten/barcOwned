@@ -122,8 +122,8 @@ const payloadList = $<HTMLDivElement>('#payloadList')!;
 
 // Editor header
 const payloadNameInput = $<HTMLInputElement>('#payloadNameInput')!;
+const payloadDescriptionInput = $<HTMLTextAreaElement>('#payloadDescriptionInput')!;
 const barcodeBadge = $<HTMLSpanElement>('#barcodeBadge')!;
-const payloadDescription = $<HTMLParagraphElement>('#payloadDescription')!;
 
 // Toolbar
 const modelSelect = $<HTMLSelectElement>('#modelSelect')!;
@@ -164,6 +164,9 @@ const barcodeContainer = $<HTMLDivElement>('#barcodeContainer')!;
 // Modals
 const shareModal = $<HTMLDialogElement>('#shareModal')!;
 const shareQrCanvas = $<HTMLCanvasElement>('#shareQrCanvas')!;
+const shareSizeMinusBtn = $<HTMLButtonElement>('#shareSizeMinusBtn')!;
+const shareSizePlusBtn = $<HTMLButtonElement>('#shareSizePlusBtn')!;
+const shareSizeValue = $<HTMLSpanElement>('#shareSizeValue')!;
 const shareUrl = $<HTMLInputElement>('#shareUrl')!;
 const importModal = $<HTMLDialogElement>('#importModal')!;
 const importTextarea = $<HTMLTextAreaElement>('#importTextarea')!;
@@ -226,6 +229,18 @@ function getDraftId(baseType: 'preset' | 'user' | 'new', baseId?: string): strin
   return `${baseType}:${baseId}`;
 }
 
+function saveEditorScroll() {
+  if (!state.currentBaseType) return;
+  const draftId = state.currentBaseType === 'new'
+    ? (state.currentBaseId ?? getDraftId('new'))
+    : getDraftId(state.currentBaseType, state.currentBaseId!);
+
+  const existing = loadDrafts().find(d => d.id === draftId);
+  if (!existing) return;
+  existing.scrollTop = editor?.scrollDOM?.scrollTop ?? 0;
+  saveDraft(existing);
+}
+
 function getBaseTextFromPayload(payload: Payload): string {
   return JSON.stringify(payload, null, 2);
 }
@@ -258,17 +273,17 @@ function persistDraftNow() {
 
   state.currentBaseId = state.currentBaseId ?? draftId;
 
-  if (state.currentBaseType !== 'new' && !state.editorDirty) {
-    deleteDraft(draftId);
-    emitStateChange();
-    return;
-  }
+  const scrollTop = editor?.scrollDOM?.scrollTop ?? 0;
+  const text = state.editorDirty || state.currentBaseType === 'new'
+    ? state.currentText
+    : state.baseText;
 
   saveDraft({
     id: draftId,
     baseId: state.currentBaseType === 'new' ? undefined : state.currentBaseId!,
     baseType: state.currentBaseType,
-    text: state.currentText,
+    text,
+    scrollTop,
     updatedAt: Date.now(),
   });
   emitStateChange();
@@ -309,8 +324,16 @@ function refreshFromStorage() {
         editor.dispatch({
           changes: { from: 0, to: editor.state.doc.length, insert: draft.text }
         });
+        editor.scrollDOM.scrollTop = draft.scrollTop ?? 0;
         suppressEditorChange = false;
       }
+      payloadDescriptionInput.value = (() => {
+        try {
+          return (JSON.parse(draft.text) as Payload).description || '';
+        } catch {
+          return '';
+        }
+      })();
     }
     return;
   }
@@ -334,8 +357,17 @@ function refreshFromStorage() {
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: text }
     });
+    editor.scrollDOM.scrollTop = draft?.scrollTop ?? 0;
     suppressEditorChange = false;
   }
+
+  payloadDescriptionInput.value = (() => {
+    try {
+      return (JSON.parse(text) as Payload).description || '';
+    } catch {
+      return '';
+    }
+  })();
 
   updateBarcodeData();
   renderPreview();
@@ -582,6 +614,9 @@ function performDelete() {
 }
 
 function selectPayload(id: string, type?: 'preset' | 'user' | 'draft') {
+  // Save scroll position for current draft before switching
+  saveEditorScroll();
+
   let baseType: 'preset' | 'user' | 'new';
   let baseId: string | null = id;
   let basePayload: Payload | null = null;
@@ -619,7 +654,7 @@ function selectPayload(id: string, type?: 'preset' | 'user' | 'draft') {
   const baseText = basePayload ? getBaseTextFromPayload(basePayload) : '';
   state.baseText = baseText;
 
-  const draftId = baseType === 'new' ? baseId! : getDraftId(baseType, baseId!);
+    const draftId = baseType === 'new' ? baseId! : getDraftId(baseType, baseId!);
   const draft = loadDrafts().find(d => d.id === draftId);
   const text = draft?.text ?? baseText;
 
@@ -631,6 +666,7 @@ function selectPayload(id: string, type?: 'preset' | 'user' | 'draft') {
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: text }
     });
+    editor.scrollDOM.scrollTop = draft?.scrollTop ?? 0;
     suppressEditorChange = false;
   }
 
@@ -647,7 +683,7 @@ function selectPayload(id: string, type?: 'preset' | 'user' | 'draft') {
   // Update header
   payloadNameInput.value = state.currentPayload?.name || 'Untitled';
   payloadNameInput.readOnly = false;
-  payloadDescription.textContent = state.currentPayload?.description || '';
+  payloadDescriptionInput.value = state.currentPayload?.description || '';
 
   // Update barcode data and preview
   updateBarcodeData();
@@ -757,6 +793,10 @@ async function initEditor() {
     state: startState,
     parent: editorContainer,
   });
+
+  editor.scrollDOM.addEventListener('scroll', () => {
+    scheduleDraftSave();
+  });
   
   // Store setDiagnostics for later use
   (editor as any)._setDiagnostics = setDiagnostics;
@@ -774,6 +814,12 @@ function validateAndPreview() {
     }
     
     state.currentPayload = payload;
+    if (document.activeElement !== payloadNameInput) {
+      payloadNameInput.value = payload.name || '';
+    }
+    if (document.activeElement !== payloadDescriptionInput) {
+      payloadDescriptionInput.value = payload.description || '';
+    }
     updateStatusBar('✓ Valid JSON', false);
     
     // Clear any error diagnostics
@@ -1050,11 +1096,12 @@ function discardChanges() {
 }
 
 // Name input editing (sync into JSON when valid)
-payloadNameInput.addEventListener('input', () => {
+function syncFieldToJson(updates: Partial<Pick<Payload, 'name' | 'description'>>){
   if (!editor) return;
   try {
     const payload = JSON.parse(state.currentText) as Payload;
-    payload.name = payloadNameInput.value;
+    if (typeof updates.name !== 'undefined') payload.name = updates.name;
+    if (typeof updates.description !== 'undefined') payload.description = updates.description;
     const text = JSON.stringify(payload, null, 2);
     suppressEditorChange = true;
     editor.dispatch({
@@ -1070,6 +1117,14 @@ payloadNameInput.addEventListener('input', () => {
     state.editorDirty = true;
     setDirtyState(true);
   }
+}
+
+payloadNameInput.addEventListener('input', () => {
+  syncFieldToJson({ name: payloadNameInput.value });
+});
+
+payloadDescriptionInput.addEventListener('input', () => {
+  syncFieldToJson({ description: payloadDescriptionInput.value });
 });
 
 // ============================================
@@ -1400,6 +1455,22 @@ function updateSizeLabel() {
   sizeValue.textContent = `${pct}%`;
 }
 
+function updateShareSizeLabel() {
+  const current = state.settings.shareQrScale ?? 3;
+  const pct = Math.round((current / 3) * 100);
+  shareSizeValue.textContent = `${pct}%`;
+}
+
+async function adjustShareScale(delta: number) {
+  const current = state.settings.shareQrScale ?? 3;
+  const next = Math.max(0.5, current + delta);
+  state.settings = saveSettings({ shareQrScale: next });
+  updateShareSizeLabel();
+  if (shareUrl.value) {
+    await renderShareQrCode(shareQrCanvas, shareUrl.value, next);
+  }
+}
+
 function renderCurrentBarcode() {
   if (!state.barcodeData) return;
   
@@ -1454,7 +1525,8 @@ $('#shareBtn')?.addEventListener('click', async () => {
   
   // Render QR code
   try {
-    await renderShareQrCode(shareQrCanvas, url);
+    await renderShareQrCode(shareQrCanvas, url, state.settings.shareQrScale ?? 3);
+    updateShareSizeLabel();
   } catch (e) {
     console.error('Failed to render QR code:', e);
   }
@@ -1476,6 +1548,14 @@ $('#copyUrlBtn')?.addEventListener('click', () => {
       copyBtn.innerHTML = originalContent;
     }, 1500);
   }
+});
+
+shareSizeMinusBtn.addEventListener('click', async () => {
+  adjustShareScale(-0.5);
+});
+
+shareSizePlusBtn.addEventListener('click', async () => {
+  adjustShareScale(0.5);
 });
 
 // Close modal on backdrop click
@@ -1554,6 +1634,12 @@ function initIcons() {
 
   const sizeFullscreen = $('#sizeFullscreenBtn');
   if (sizeFullscreen) sizeFullscreen.innerHTML = `${iconMaximize} Fullscreen`;
+
+  const shareSizeMinus = $('#shareSizeMinusBtn');
+  if (shareSizeMinus) shareSizeMinus.innerHTML = `${iconMinus}`;
+
+  const shareSizePlus = $('#shareSizePlusBtn');
+  if (shareSizePlus) shareSizePlus.innerHTML = `${iconPlus}`;
   
   // Modals
   const shareCloseBtn = $('#shareCloseBtn');
@@ -1601,6 +1687,7 @@ async function init() {
   initRunner();
   renderPayloadList();
   updatePreviewToggle();
+  updateShareSizeLabel();
   
   // Default: select "Hello World" preset
   const defaultPresetId = Object.keys(presets)[0];

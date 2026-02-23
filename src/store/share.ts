@@ -117,12 +117,13 @@ export function clearUrlHash(): void {
  */
 export async function renderShareQrCode(
   canvas: HTMLCanvasElement,
-  url: string
+  url: string,
+  scale: number = 4
 ): Promise<void> {
   await renderToCanvas(canvas, {
     symbology: 'qrcode',
     data: url,
-    scale: 4,
+    scale,
     backgroundcolor: 'ffffff',
     barcolor: '000000',
   });

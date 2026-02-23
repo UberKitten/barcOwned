@@ -68,7 +68,9 @@
               <input type="text" class="editor-title-input" id="payloadNameInput" placeholder="Payload name..." readonly>
               <span class="editor-badge" id="barcodeBadge">0 barcodes</span>
             </div>
-            <p class="editor-description" id="payloadDescription"></p>
+            <div class="editor-description">
+              <textarea id="payloadDescriptionInput" placeholder="Description..." rows="2"></textarea>
+            </div>
           </header>
 
           <!-- Toolbar -->
@@ -229,6 +231,12 @@
       
       <div class="share-qr-container">
         <canvas id="shareQrCanvas" width="200" height="200"></canvas>
+      </div>
+
+      <div class="share-size-row">
+        <button class="btn btn-sm" id="shareSizeMinusBtn">-</button>
+        <span class="share-size-value" id="shareSizeValue">100%</span>
+        <button class="btn btn-sm" id="shareSizePlusBtn">+</button>
       </div>
       
       <p class="share-description">
