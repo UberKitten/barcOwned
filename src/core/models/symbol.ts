@@ -26,7 +26,7 @@
  * - Scanner product reference guides
  */
 
-import type { ScannerModel, BarcodeData } from '../types';
+import type { ScannerModel, BarcodeData, BarcodeEntry } from '../types';
 
 /**
  * Motorola/Zebra Symbol scanner model definition.
@@ -275,9 +275,177 @@ export const symbolModel: ScannerModel = {
    * This combines multiple setup barcodes into fewer 2D barcodes.
    */
   optimizeBarcodeData: (data: BarcodeData): BarcodeData => {
-    // For now, return unoptimized
-    // Future: implement C40 aggregation for DataMatrix
-    return data;
+    const setupCount = data.setupCount ?? 0;
+    if (setupCount === 0 || data.barcodes.length === 0) return data;
+
+    const setupBarcodes = data.barcodes.slice(0, setupCount);
+    if (setupBarcodes.length === 0) return data;
+
+    const encodeC40 = (barcode: string): string => {
+      const getCodewords = (character: string): Array<{ set: number; value: number }> => {
+        let ascii = character.charCodeAt(0);
+        const codewords: Array<{ set: number; value: number }> = [];
+
+        const addCodeword = (set: number, value: number) => {
+          if (set !== 0) {
+            codewords.push({
+              set: 0,
+              value: set - 1,
+            });
+          }
+          codewords.push({ set, value });
+        };
+
+        if (ascii >= 128 && ascii <= 255) {
+          addCodeword(2, 30);
+          ascii -= 128;
+        }
+
+        if (ascii === 32) {
+          addCodeword(0, 3);
+        } else if (ascii >= 48 && ascii <= 57) {
+          addCodeword(0, ascii - (48 - 4));
+        } else if (ascii >= 65 && ascii <= 90) {
+          addCodeword(0, ascii - (65 - 14));
+        } else if (ascii >= 0 && ascii <= 31) {
+          addCodeword(1, ascii - (0 - 0));
+        } else if (ascii >= 33 && ascii <= 47) {
+          addCodeword(2, ascii - (33 - 0));
+        } else if (ascii >= 58 && ascii <= 64) {
+          addCodeword(2, ascii - (58 - 15));
+        } else if (ascii >= 91 && ascii <= 95) {
+          addCodeword(2, ascii - (91 - 22));
+        } else if (ascii >= 96 && ascii <= 127) {
+          addCodeword(3, ascii - (96 - 0));
+        } else {
+          console.error(`Character ${character} can not be encoded in C40`);
+        }
+
+        return codewords;
+      };
+
+      const isEscaped = (test: string, startIndex: number): boolean => {
+        if (test.charAt(startIndex) !== '^') return false;
+        if (startIndex + 3 >= test.length) return false;
+
+        if (test.charAt(startIndex + 1) === '0' || test.charAt(startIndex + 1) === '1') {
+          const c2 = test.charCodeAt(startIndex + 2);
+          const c3 = test.charCodeAt(startIndex + 3);
+          if (c2 >= 48 && c2 <= 57 && c3 >= 48 && c3 <= 57) return true;
+        }
+
+        if (test.charAt(startIndex + 1) === '2') {
+          const c2 = test.charCodeAt(startIndex + 2);
+          const c3 = test.charCodeAt(startIndex + 3);
+          if (c2 >= 48 && c2 <= 53 && c3 >= 48 && c3 <= 53) return true;
+        }
+
+        return false;
+      };
+
+      const segments: string[] = [];
+      let currentSegment = '';
+
+      for (let i = 0; i < barcode.length; i++) {
+        if (isEscaped(barcode, i)) {
+          if (currentSegment.length > 0) {
+            segments.push(currentSegment);
+          }
+          currentSegment = '';
+          segments.push(barcode.substring(i, i + 4));
+          i += 3;
+          continue;
+        }
+        currentSegment += barcode.charAt(i);
+      }
+
+      if (currentSegment.length > 0) {
+        segments.push(currentSegment);
+      }
+
+      let encodedBarcode = '';
+
+      for (let segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
+        const segment = segments[segmentIndex];
+        if (isEscaped(segment, 0)) {
+          if (segmentIndex > 0 && !isEscaped(segments[segmentIndex - 1], 0)) {
+            encodedBarcode += '^254';
+          }
+          encodedBarcode += segment;
+        } else {
+          const charCodewords: Array<Array<{ set: number; value: number }>> = [];
+          for (let i = 0; i < segment.length; i++) {
+            charCodewords.push(getCodewords(segment.charAt(i)));
+          }
+
+          let unlatchChars = 0;
+          for (unlatchChars = 0; unlatchChars < charCodewords.length; unlatchChars++) {
+            let codewordLength = 0;
+            for (let i = 0; i < charCodewords.length - unlatchChars; i++) {
+              codewordLength += charCodewords[i].length;
+            }
+            if (codewordLength % 3 === 0) {
+              break;
+            }
+          }
+
+          if (charCodewords.length - unlatchChars > 0) {
+            encodedBarcode += '^230';
+          }
+
+          let currentChunk: number[] = [];
+          for (let i = 0; i < charCodewords.length - unlatchChars; i++) {
+            for (let j = 0; j < charCodewords[i].length; j++) {
+              currentChunk.push(charCodewords[i][j].value);
+              if (currentChunk.length >= 3) {
+                const code = (1600 * currentChunk[0]) + (40 * currentChunk[1]) + currentChunk[2] + 1;
+                const char1 = Math.trunc(code / 256);
+                const char2 = code % 256;
+                encodedBarcode += `^${char1.toString().padStart(3, '0')}^${char2.toString().padStart(3, '0')}`;
+                currentChunk = [];
+              }
+            }
+          }
+
+          if (charCodewords.length - unlatchChars > 0) {
+            encodedBarcode += '^254';
+          }
+
+          for (let i = segment.length - unlatchChars; i < segment.length; i++) {
+            encodedBarcode += `^${(segment.charCodeAt(i) + 1).toString().padStart(3, '0')}`;
+          }
+        }
+      }
+
+      return encodedBarcode + '^129';
+    };
+
+    let aggregateBarcode = '^234' + 'N6' + 'S2681000' + 'barcOwned       ';
+
+    setupBarcodes.forEach((barcode) => {
+      const cleaned = barcode.code
+        .replace('^FNC3', '')
+        .replace('7B1211', 'N57B1211');
+      aggregateBarcode += cleaned;
+    });
+
+    const combinedEntry: BarcodeEntry = {
+      code: encodeC40(aggregateBarcode),
+      comment: 'combined setup (C40)',
+      symbology: 'datamatrix',
+      BWIPPoptions: {
+        raw: true,
+      },
+    };
+
+    const payloadEntries = data.barcodes.slice(setupCount).map((entry) => ({ ...entry }));
+
+    return {
+      barcodes: [combinedEntry, ...payloadEntries],
+      symbology: data.symbology,
+      BWIPPoptions: data.BWIPPoptions,
+      setupCount: 1,
+    };
   },
 };
 

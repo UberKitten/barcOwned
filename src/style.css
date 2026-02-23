@@ -688,6 +688,25 @@ body {
    Barcode Preview Sidebar
    ============================================ */
 
+.preview-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.preview-controls label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.select-sm {
+  padding: 4px 8px;
+  font-size: var(--font-size-xs);
+}
+
 .preview-list {
   flex: 1;
   overflow-y: auto;
@@ -724,6 +743,12 @@ body {
 
 .preview-item-label {
   font-weight: 600;
+}
+
+.preview-item-comment {
+  padding: 0 var(--space-sm) var(--space-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
 }
 
 .preview-item.setup .preview-item-header {
@@ -879,6 +904,12 @@ body {
   font-size: 14px;
   color: #666;
   font-weight: 500;
+}
+
+.barcode-comment {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
 }
 
 .runner-progress {

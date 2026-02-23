@@ -353,6 +353,7 @@ export interface Settings {
   modelId: string;
   displayMode: 'auto' | 'list' | 'manual';
   barcodeType: '1d' | '2d';
+  barcodeVariant: 'individual' | 'combined';
   autoRate: number;
   startDelay: number;
   quietPeriod: number;
@@ -365,6 +366,7 @@ export const defaultSettings: Settings = {
   modelId: 'symbol',
   displayMode: 'auto',
   barcodeType: '2d',
+  barcodeVariant: 'individual',
   autoRate: 0.4,
   startDelay: 3,
   quietPeriod: 0.5,

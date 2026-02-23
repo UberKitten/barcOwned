@@ -140,12 +140,14 @@ const statusPosition = $<HTMLSpanElement>('#statusPosition')!;
 const previewList = $<HTMLDivElement>('#previewList')!;
 const previewToggle = $<HTMLButtonElement>('#previewToggle')!;
 const previewBtn = $<HTMLButtonElement>('#previewBtn')!;
+const previewModeSelect = $<HTMLSelectElement>('#previewMode')!;
 
 // Runner
 const runnerTitle = $<HTMLElement>('#runnerTitle')!;
 const runnerMessage = $<HTMLDivElement>('#runnerMessage')!;
 const autoRateSelect = $<HTMLSelectElement>('#autoRate')!;
 const startDelaySelect = $<HTMLSelectElement>('#startDelay')!;
+const runnerBarcodeModeSelect = $<HTMLSelectElement>('#runnerBarcodeMode')!;
 const sizeMinusBtn = $<HTMLButtonElement>('#sizeMinusBtn')!;
 const sizePlusBtn = $<HTMLButtonElement>('#sizePlusBtn')!;
 const sizeFullscreenBtn = $<HTMLButtonElement>('#sizeFullscreenBtn')!;
@@ -153,6 +155,7 @@ const sizeValue = $<HTMLSpanElement>('#sizeValue')!;
 const playPauseBtn = $<HTMLButtonElement>('#playPauseBtn')!;
 const barcodeCanvas = $<HTMLCanvasElement>('#barcodeCanvas')!;
 const barcodeLabel = $<HTMLDivElement>('#barcodeLabel')!;
+const barcodeComment = $<HTMLDivElement>('#barcodeComment')!;
 const progressFill = $<HTMLDivElement>('#progressFill')!;
 const progressText = $<HTMLSpanElement>('#progressText')!;
 const timeText = $<HTMLSpanElement>('#timeText')!;
@@ -920,6 +923,36 @@ function updateStatusBar(message: string, isError = false) {
   }
 }
 
+function getActiveBarcodeData() {
+  if (!state.barcodeData) return null;
+  if (state.settings.barcodeVariant === 'combined' && state.barcodeData.combined) {
+    return state.barcodeData.combined;
+  }
+  return state.barcodeData;
+}
+
+function setBarcodeCountsFromData(data: BarcodeData) {
+  const setupCount = data.setupCount ?? 0;
+  state.setupCount = setupCount;
+  state.payloadCount = Math.max(0, data.barcodes.length - setupCount);
+}
+
+function syncBarcodeVariantOptions() {
+  const hasCombined = !!state.barcodeData?.combined;
+  const options = [previewModeSelect, runnerBarcodeModeSelect];
+  options.forEach((select) => {
+    const combinedOption = select.querySelector('option[value="combined"]') as HTMLOptionElement | null;
+    if (combinedOption) {
+      combinedOption.disabled = !hasCombined;
+    }
+  });
+  if (!hasCombined && state.settings.barcodeVariant === 'combined') {
+    state.settings = saveSettings({ barcodeVariant: 'individual' });
+    previewModeSelect.value = 'individual';
+    runnerBarcodeModeSelect.value = 'individual';
+  }
+}
+
 function updateBarcodeData() {
   if (!state.currentPayload) {
     barcodeBadge.textContent = '0 barcodes';
@@ -933,17 +966,21 @@ function updateBarcodeData() {
     const model = getModel(state.settings.modelId);
     const engine = new BarcOwned(model);
     
-    // Get counts for labeling
-    const setupData = engine.getSetupBarcodeData(state.currentPayload);
-    const payloadData = engine.getPayloadBarcodeData(state.currentPayload);
-    state.setupCount = setupData.barcodes.length;
-    state.payloadCount = payloadData.barcodes.length;
-    
     // Get full barcode data
     const data = engine.getBarcodeData(state.currentPayload);
     state.barcodeData = data;
-    
-    const total = data.barcodes.length;
+    syncBarcodeVariantOptions();
+
+    const active = getActiveBarcodeData();
+    if (!active) {
+      barcodeBadge.textContent = '0 barcodes';
+      state.setupCount = 0;
+      state.payloadCount = 0;
+      return;
+    }
+
+    setBarcodeCountsFromData(active);
+    const total = active.barcodes.length;
     barcodeBadge.textContent = `${total} barcode${total !== 1 ? 's' : ''}`;
   } catch (e) {
     console.error('Error generating barcode data:', e);
@@ -957,12 +994,15 @@ function updateBarcodeData() {
 // ============================================
 
 async function renderPreview() {
-  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
+  const active = getActiveBarcodeData();
+  if (!active || active.barcodes.length === 0) {
     previewList.innerHTML = '<div class="preview-empty">No barcodes to preview</div>';
     return;
   }
   
-  const { barcodes, symbology, BWIPPoptions } = state.barcodeData;
+  setBarcodeCountsFromData(active);
+  const { barcodes, symbology, BWIPPoptions } = active;
+  const showComments = state.settings.barcodeVariant !== 'combined';
   
   // Build preview HTML
   let html = '';
@@ -972,6 +1012,7 @@ async function renderPreview() {
     const typeIndex = isSetup ? i + 1 : i - state.setupCount + 1;
     const typeTotal = isSetup ? state.setupCount : state.payloadCount;
     const label = `${isSetup ? 'Setup' : 'Payload'} ${typeIndex}/${typeTotal}`;
+    const comment = showComments ? (barcodes[i].comment ?? '') : '';
     
     html += `
       <div class="preview-item ${type}">
@@ -979,6 +1020,7 @@ async function renderPreview() {
           <span class="preview-item-label">${label}</span>
         </div>
         <canvas data-index="${i}"></canvas>
+        ${comment ? `<div class="preview-item-comment">${comment}</div>` : ''}
       </div>
     `;
   }
@@ -989,12 +1031,14 @@ async function renderPreview() {
   const canvases = previewList.querySelectorAll('canvas');
   for (const canvas of canvases) {
     const index = parseInt((canvas as HTMLCanvasElement).dataset.index!, 10);
+    const entry = barcodes[index];
     try {
       await renderToCanvas(canvas as HTMLCanvasElement, {
-        symbology,
-        data: barcodes[index],
+        symbology: entry.symbology ?? symbology,
+        data: entry.code,
         scale: 2,
         ...BWIPPoptions,
+        ...(entry.BWIPPoptions ?? {}),
       });
     } catch (e) {
       console.error(`Failed to render preview barcode ${index}:`, e);
@@ -1258,13 +1302,46 @@ function initRunner() {
   });
 
   // Auto rate
+  autoRateSelect.value = String(state.settings.autoRate ?? 0.4);
   autoRateSelect.addEventListener('change', () => {
     state.settings = saveSettings({ autoRate: parseFloat(autoRateSelect.value) });
   });
   
   // Start delay
+  startDelaySelect.value = String(state.settings.startDelay ?? 0);
   startDelaySelect.addEventListener('change', () => {
     state.settings = saveSettings({ startDelay: parseInt(startDelaySelect.value) });
+  });
+
+  // Barcode mode (individual vs combined)
+  const currentVariant = state.settings.barcodeVariant ?? 'individual';
+  previewModeSelect.value = currentVariant;
+  runnerBarcodeModeSelect.value = currentVariant;
+
+  const applyVariant = (value: string) => {
+    const variant = value === 'combined' ? 'combined' : 'individual';
+    state.settings = saveSettings({ barcodeVariant: variant });
+    previewModeSelect.value = variant;
+    runnerBarcodeModeSelect.value = variant;
+    syncBarcodeVariantOptions();
+    state.currentBarcodeIndex = 0;
+    const active = getActiveBarcodeData();
+    if (active) {
+      setBarcodeCountsFromData(active);
+      const total = active.barcodes.length;
+      barcodeBadge.textContent = `${total} barcode${total !== 1 ? 's' : ''}`;
+    }
+    renderPreview();
+    renderCurrentBarcode();
+    updateRunnerUI();
+  };
+
+  previewModeSelect.addEventListener('change', () => {
+    applyVariant(previewModeSelect.value);
+  });
+
+  runnerBarcodeModeSelect.addEventListener('change', () => {
+    applyVariant(runnerBarcodeModeSelect.value);
   });
 
   // Size controls
@@ -1286,8 +1363,9 @@ function initRunner() {
 
 function updateRunnerUI() {
   // Update progress
-  if (state.barcodeData) {
-    const total = state.barcodeData.barcodes.length;
+  const active = getActiveBarcodeData();
+  if (active) {
+    const total = active.barcodes.length;
     progressText.textContent = `0 / ${total}`;
     progressFill.style.width = '0%';
   }
@@ -1299,7 +1377,8 @@ function updateRunnerUI() {
 }
 
 $('#runBtn')?.addEventListener('click', () => {
-  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
+  const active = getActiveBarcodeData();
+  if (!active || active.barcodes.length === 0) {
     showRunnerMessage('No barcodes to display. Select a payload first.', true);
     showView('runner');
     return;
@@ -1323,14 +1402,16 @@ prevBtn.addEventListener('click', () => {
 });
 
 nextBtn.addEventListener('click', () => {
-  if (state.barcodeData && state.currentBarcodeIndex < state.barcodeData.barcodes.length - 1) {
+  const active = getActiveBarcodeData();
+  if (active && state.currentBarcodeIndex < active.barcodes.length - 1) {
     state.currentBarcodeIndex++;
     renderCurrentBarcode();
   }
 });
 
 barcodeContainer.addEventListener('click', () => {
-  if (state.barcodeData && state.currentBarcodeIndex < state.barcodeData.barcodes.length - 1) {
+  const active = getActiveBarcodeData();
+  if (active && state.currentBarcodeIndex < active.barcodes.length - 1) {
     state.currentBarcodeIndex++;
     renderCurrentBarcode();
   }
@@ -1346,7 +1427,8 @@ document.addEventListener('keydown', (e) => {
     }
   } else if (e.key === 'ArrowRight') {
     e.preventDefault();
-    if (state.barcodeData && state.currentBarcodeIndex < state.barcodeData.barcodes.length - 1) {
+    const active = getActiveBarcodeData();
+    if (active && state.currentBarcodeIndex < active.barcodes.length - 1) {
       state.currentBarcodeIndex++;
       renderCurrentBarcode();
     }
@@ -1361,7 +1443,8 @@ document.addEventListener('keydown', (e) => {
 });
 
 function startPlayback() {
-  if (!state.barcodeData || state.barcodeData.barcodes.length === 0) {
+  const active = getActiveBarcodeData();
+  if (!active || active.barcodes.length === 0) {
     showRunnerMessage('No barcodes to display.', true);
     return;
   }
@@ -1406,8 +1489,9 @@ function scheduleNextAdvance() {
   state.remainingMs = intervalMs;
 
   state.playbackTimeout = window.setTimeout(() => {
-    if (!state.isRunning || !state.barcodeData) return;
-    if (state.currentBarcodeIndex < state.barcodeData.barcodes.length - 1) {
+    const active = getActiveBarcodeData();
+    if (!state.isRunning || !active) return;
+    if (state.currentBarcodeIndex < active.barcodes.length - 1) {
       state.currentBarcodeIndex++;
       renderCurrentBarcode();
       scheduleNextAdvance();
@@ -1472,32 +1556,38 @@ async function adjustShareScale(delta: number) {
 }
 
 function renderCurrentBarcode() {
-  if (!state.barcodeData) return;
-  
-  const data = state.barcodeData;
+  const data = getActiveBarcodeData();
+  if (!data) return;
+
+  setBarcodeCountsFromData(data);
   const index = state.currentBarcodeIndex;
   const total = data.barcodes.length;
-  
+
   // Update progress
   progressFill.style.width = `${((index + 1) / total) * 100}%`;
   progressText.textContent = `${index + 1} / ${total}`;
-  
+
   // Update label
   const isSetup = index < state.setupCount;
   const typeIndex = isSetup ? index + 1 : index - state.setupCount + 1;
   const typeTotal = isSetup ? state.setupCount : state.payloadCount;
   barcodeLabel.textContent = `${isSetup ? 'Setup' : 'Payload'} ${typeIndex}/${typeTotal}`;
-  
+
+  const entry = data.barcodes[index];
+  const showComments = state.settings.barcodeVariant !== 'combined';
+  barcodeComment.textContent = showComments ? (entry.comment ?? '') : '';
+
   // Render barcode
   renderToCanvas(barcodeCanvas, {
-    symbology: data.symbology,
-    data: data.barcodes[index],
+    symbology: entry.symbology ?? data.symbology,
+    data: entry.code,
     scale: state.settings.barcodeScale ?? 4,
     ...data.BWIPPoptions,
+    ...(entry.BWIPPoptions ?? {}),
   }).catch(e => {
     console.error('Render error:', e);
   });
-  
+
   // Update nav buttons
   prevBtn.disabled = index === 0;
   nextBtn.disabled = index === total - 1;
