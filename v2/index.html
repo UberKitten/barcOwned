@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Like a Rubber Ducky, but with barcodes. Program barcode scanners to deliver HID keyboard payloads.">
+  <meta name="author" content="Astra West">
+  <meta name="theme-color" content="#1a1a2e">
+  
+  <title>barcOwned</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-brand">
+        <button class="nav-menu-btn" id="menuToggle" aria-label="Toggle sidebar">☰</button>
+        <span class="nav-logo">⌘</span>
+        <span class="nav-title">barcOwned</span>
+      </div>
+      
+      <div class="nav-links">
+        <a href="https://github.com/UberKitten/barcowned/wiki" target="_blank" rel="noopener" class="nav-link">
+          Docs
+        </a>
+        <a href="https://github.com/UberKitten/barcowned" target="_blank" rel="noopener" class="nav-link">
+          GitHub
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Layout: 3-column IDE -->
+    <div class="app-layout">
+      <!-- Left Sidebar: Payload List (File Explorer) -->
+      <aside class="sidebar sidebar-left" id="sidebarLeft">
+        <div class="sidebar-header">
+          <h2>Payloads</h2>
+        </div>
+        
+        <div class="payload-list" id="payloadList">
+          <!-- Populated by JS -->
+        </div>
+        
+        <div class="sidebar-footer">
+          <button class="btn btn-sm btn-ghost" id="importBtn">Import</button>
+          <button class="btn btn-sm btn-ghost" id="exportBtn" disabled>Export</button>
+          <button class="btn btn-sm btn-ghost" id="exportAllBtn" disabled>Export All</button>
+        </div>
+      </aside>
+
+      <!-- Center: Code Editor (Main Area) -->
+      <main class="main-content" id="mainContent">
+        <!-- Empty State (shown when no payload selected) -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-state-icon">⌘</div>
+          <h2>Select a Payload</h2>
+          <p>Choose a payload from the sidebar to get started, or create a new one.</p>
+        </div>
+
+        <!-- Editor View (shown when payload selected) -->
+        <div class="editor-view hidden" id="editorView">
+          <!-- Editor Header -->
+          <header class="editor-header">
+            <div class="editor-title-row">
+              <input type="text" class="editor-title-input" id="payloadNameInput" placeholder="Payload name..." readonly>
+              <span class="editor-badge" id="barcodeBadge">0 barcodes</span>
+            </div>
+            <div class="editor-description">
+              <textarea id="payloadDescriptionInput" placeholder="Description..." rows="2"></textarea>
+            </div>
+          </header>
+
+          <!-- Toolbar -->
+          <div class="editor-toolbar">
+            <div class="toolbar-group">
+              <button class="toolbar-btn toolbar-btn-primary" id="runBtn" title="Run payload">
+                <span class="toolbar-icon">▶</span>
+                <span class="toolbar-label">Run</span>
+              </button>
+            </div>
+
+            <div class="toolbar-separator"></div>
+
+            <div class="toolbar-group">
+              <button class="toolbar-btn" id="saveBtn" title="Save payload">
+                <span class="toolbar-icon">💾</span>
+                <span class="toolbar-label">Save</span>
+                <span class="dirty-dot hidden" id="saveDirtyDot"></span>
+              </button>
+              <button class="toolbar-btn" id="discardBtn" title="Discard changes">
+                <span class="toolbar-icon">↩</span>
+                <span class="toolbar-label">Discard</span>
+              </button>
+              <button class="toolbar-btn" id="shareBtn" title="Share payload">
+                <span class="toolbar-icon">↗</span>
+                <span class="toolbar-label">Share</span>
+              </button>
+            </div>
+
+            <div class="toolbar-spacer"></div>
+
+            <div class="toolbar-group toolbar-right">
+              <select id="modelSelect" class="toolbar-select" title="Scanner model">
+                <!-- Populated by JS -->
+              </select>
+              <button class="toolbar-btn" id="previewBtn" title="Toggle preview">
+                <span class="toolbar-icon">👁</span>
+                <span class="toolbar-label">Preview</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Editor Body (Editor or Runner) -->
+          <div class="editor-body">
+            <!-- CodeMirror Editor -->
+            <div class="editor-container" id="editorContainer">
+              <!-- CodeMirror mounts here -->
+            </div>
+
+            <!-- Runner View (shown during run) -->
+            <div class="runner-view hidden" id="runnerView">
+              <header class="runner-header">
+                <button class="btn btn-ghost" id="backToEditorBtn">← Back to Editor</button>
+                <h2 id="runnerTitle">Running: Payload Name</h2>
+              </header>
+              
+              <!-- Inline message area for runner -->
+              <div class="runner-message hidden" id="runnerMessage"></div>
+
+              <!-- Runner Controls -->
+              <div class="runner-controls">
+                <div class="control-group">
+                  <label>Speed</label>
+                  <select id="autoRate" class="select">
+                    <option value="0.25">0.25 Hz (4s)</option>
+                    <option value="0.4" selected>0.4 Hz (2.5s)</option>
+                    <option value="0.5">0.5 Hz (2s)</option>
+                    <option value="1.0">1.0 Hz (1s)</option>
+                    <option value="2.0">2.0 Hz (0.5s)</option>
+                  </select>
+                </div>
+                
+                <div class="control-group">
+                  <label>Start Delay</label>
+                  <select id="startDelay" class="select">
+                    <option value="0">None</option>
+                    <option value="1">1 second</option>
+                    <option value="2">2 seconds</option>
+                    <option value="3" selected>3 seconds</option>
+                    <option value="5">5 seconds</option>
+                  </select>
+                </div>
+
+                <div class="control-group">
+                  <label>Barcode Mode</label>
+                  <select id="runnerBarcodeMode" class="select">
+                    <option value="individual" selected>Individual</option>
+                    <option value="combined">Combined (C40)</option>
+                  </select>
+                </div>
+
+                <div class="control-group">
+                  <label>Size</label>
+                  <div class="size-controls">
+                    <button class="btn btn-sm" id="sizeMinusBtn">-</button>
+                    <span class="size-value" id="sizeValue">100%</span>
+                    <button class="btn btn-sm" id="sizePlusBtn">+</button>
+                    <button class="btn btn-sm" id="sizeFullscreenBtn">Fullscreen</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Barcode Display -->
+              <div class="barcode-display">
+                <div class="barcode-container" id="barcodeContainer">
+                  <canvas id="barcodeCanvas"></canvas>
+                  <div class="barcode-label" id="barcodeLabel"></div>
+                  <div class="barcode-comment" id="barcodeComment"></div>
+                </div>
+                
+                <div class="runner-progress">
+                  <div class="progress-row">
+                    <span class="progress-text" id="progressText">0 / 0</span>
+                    <span class="time-text" id="timeText">Paused</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                  </div>
+                  <div class="progress-bar progress-bar-time">
+                    <div class="progress-fill time-fill" id="timeProgressFill"></div>
+                  </div>
+                </div>
+                
+                <div class="runner-nav">
+                  <button class="btn btn-lg" id="prevBtn">← Prev</button>
+                  <button class="btn btn-lg btn-primary" id="playPauseBtn">
+                    <span>▶ Play</span>
+                  </button>
+                  <button class="btn btn-lg" id="nextBtn">Next →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Bar -->
+          <div class="editor-statusbar" id="editorStatusbar">
+            <span class="status-validation" id="statusValidation">Ready</span>
+            <span class="status-spacer"></span>
+            <span class="status-position" id="statusPosition">Ln 1, Col 1</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Sidebar: Barcode Preview -->
+      <aside class="sidebar sidebar-right" id="sidebarRight">
+        <div class="sidebar-header">
+          <h2>Preview</h2>
+          <button class="sidebar-toggle" id="previewToggle" aria-label="Toggle preview">×</button>
+        </div>
+        <div class="preview-controls">
+          <label for="previewMode">Mode</label>
+          <select id="previewMode" class="select select-sm">
+            <option value="individual" selected>Individual</option>
+            <option value="combined">Combined (C40)</option>
+          </select>
+        </div>
+        
+        <div class="preview-list" id="previewList">
+          <div class="preview-empty">
+            Select a payload to preview barcodes
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <dialog id="shareModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Share Payload</h2>
+        <button class="modal-close" id="shareCloseBtn">×</button>
+      </div>
+      
+      <div class="share-qr-container">
+        <canvas id="shareQrCanvas" width="200" height="200"></canvas>
+      </div>
+
+      <div class="share-size-row">
+        <button class="btn btn-sm" id="shareSizeMinusBtn">-</button>
+        <span class="share-size-value" id="shareSizeValue">100%</span>
+        <button class="btn btn-sm" id="shareSizePlusBtn">+</button>
+      </div>
+      
+      <p class="share-description">
+        Scan with your phone to open this payload on mobile.
+      </p>
+      
+      <div class="share-url-row">
+        <input type="text" id="shareUrl" readonly placeholder="Generating...">
+        <button class="btn btn-sm btn-primary" id="copyUrlBtn">Copy</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Import Modal -->
+  <dialog id="importModal" class="modal">
+    <div class="modal-content">
+      <h2>Import Payload</h2>
+      <div class="import-file-row">
+        <input type="file" id="importFiles" multiple accept="application/json,.json">
+        <label class="btn btn-sm btn-ghost" for="importFiles" id="importFilesBtn">Choose files</label>
+        <span class="import-file-hint" id="importFileHint">or paste JSON below</span>
+      </div>
+      <textarea id="importTextarea" placeholder="Paste payload JSON here..."></textarea>
+      <div class="import-error hidden" id="importError"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="importCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="importConfirmBtn">Import</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Delete Confirm Modal -->
+  <dialog id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Delete payload?</h2>
+        <button class="modal-close" id="deleteCloseBtn">×</button>
+      </div>
+      <p id="deleteMessage">This will permanently delete the selected payload.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
